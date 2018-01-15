@@ -1,4 +1,6 @@
 function  PET  = ModHargreaves4(LAT,WATYEAR,TEMP,TEMPRANGE,PREC)
+
+%% Info
 %LAT: [numRows x1] Latitude values % numRows repsents number of basins 
 
 %WATYEAR: [1x1] Month to start on (1-12)
@@ -12,6 +14,8 @@ function  PET  = ModHargreaves4(LAT,WATYEAR,TEMP,TEMPRANGE,PREC)
 
 %  Metric values
 
+
+%% Calculations
 nummon  = size(TEMP,2);  %number of columns
 
 i = 1:nummon;
