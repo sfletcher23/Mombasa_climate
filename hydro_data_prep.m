@@ -11,8 +11,12 @@
 % T0 contains monthly historical temperature data in degrees C at Mombasa
 % from CRU from 1901 - 2012
 
+% PET is in mm/day - calculated using modifed hargreaves and validated
+% using CRU
+
 %% Load data
 load('historical data')
+
 
 %% Select matching date range from CRU data
 
@@ -50,17 +54,38 @@ pet_hg = ModHargreaves4(ones(14,1)*lat,watyear,temp,temprange,prec);
 
 %% Save pre processed data for CLIRUN
 area = 2250 * 1E6; %m2
-runoff = reshape(streamflow',1,[]) * 60 * 60 * 24 * 365  / area; % converting from m3/s to m3/y and dividing by area
-runoff = runoff * 1E3; % Converting from m/y to mm/y;
-save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'watyear', 'runoff')
+runoff = reshape(streamflow',1,[]) * 60 * 60 * 24  / area; % converting from m3/s to m3/d and dividing by area
+runoff_mwache = runoff * 1E3; % Converting from m/d to mm/d;
+save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'runoff_mwache', 'streamflow')
+
+%% Convert P to mm/d
+days = [31 28 31 30 31 30 31 31 30 31 30 31];% CRU -JAN- DEC ;
+WATYEAR = 6;   % Which year of the month start on
+days_adj = [days(WATYEAR:end) days(1:WATYEAR-1)];
+NYRS = 14;
+months = NYRS*12;
+PRECIP_0 = P0_date_lin' ./ repmat(days_adj,1,NYRS); % Convert from mm/m to mm/day
 
 %% Calculate storage-yield curve using sequent-peak algorithm
 
-inflow = reshape(streamflow',1,[]);
-%inflow = streamflow;
+load('Mwache_hydro_pton')
+P_pton(118) = (P_pton(117) + P_pton(119)) / 2;
+E_pton(118) = (E_pton(117) + E_pton(119)) / 2;
+runoff_pton(118) = (runoff_pton(117) + runoff_pton(119)) / 2;
+
+%inflow = cell(1,4);
+inflow = reshape(streamflow',1,[]) ; % m3/s whole time series as one run
+% inflow = streamflow; % individual years
+% inflow = runoff_pton/1E3 * area /24 /60 /60; % m3/s 
+% inflow = reshape(runoff_pton,12,14)'/1E3 * area /24 /60 /60;
+
 [numRuns,numTime] = size(inflow);
-maxRelease = 9.448E6;
+maxRelease = mean(inflow* 60 * 60 * 24);
 release = 0:maxRelease/25:maxRelease;
+release1 = 186000;
+release2 = 220000;
+release = [release release1 release2];
+release = sort(release); % m/d
 maxK = zeros(numRuns,length(release));
 mar = zeros(numTime,1);
 for i = 1:length(release)
@@ -75,6 +100,111 @@ storage = 200E6;
 eqn = storage == sqpk(x);
 solx = solve(eqn, x);
 end
+
+% Get yield at specified release values
+index1 = find(release == release1);
+index2 = find(release == release2);
+storage1 = maxK(index1)/1E6;
+storage2 = maxK(index2)/1E6;
+
+% Convert to days
+mar = mar;
+release = release;
+
+% Plot storage yield curve
+figure
+subplot(1,2,1)
+plot(maxK/1E6, cmpd2mcmpy(release), 'k')
+hold on
+line([0 max(max(maxK/1E6))], cmpd2mcmpy([mar mar]), 'Color', 'r', 'LineStyle', '-.')
+scatter([0 0], [cmpd2mcmpy(release1), cmpd2mcmpy(release2)], '*', 'MarkerEdgeColor', [.5 0 .5])
+hold on
+line([0 storage1], [cmpd2mcmpy(release1), cmpd2mcmpy(release1)], 'Color', [.5 0 .5])
+line([storage1 storage1], [cmpd2mcmpy(release1) 0], 'Color', [.5 0 .5])
+line([0 storage2], [cmpd2mcmpy(release2), cmpd2mcmpy(release2)], 'Color', [.5 0 .5])
+line([storage2 storage2], [cmpd2mcmpy(release2) 0], 'Color', [.5 0 .5])
+ylabel('Yield [cm/d]')
+xlabel('Storage [MCM]')
+ax = gca;
+ax.YAxis.Exponent = 0;
+ytickformat('%,4.4g')
+
+subplot(1,2,2)
+Q = inflow * 60 * 60 * 24; %m3/d
+plot(Q);
+hold on
+[~,len] = size(inflow);
+line([0 len], [mar, mar], 'LineStyle', '-.','Color', 'r')
+line([0 len], [release1, release1], 'LineStyle', '-.','Color', [.5 0 .5])
+line([0 len], [release2, release2], 'LineStyle', '-.','Color', [.5 0 .5])
+legend('Streamflow', 'MAR', 'Design Yield')
+
+% Annual
+if false
+
+[numRuns,numTime] = size(inflow);
+maxRelease = mean(inflow* 60 * 60 * 24);
+release = 0:maxRelease/25:maxRelease;
+release1 = 186000;
+release2 = 220000;
+release = [release release1 release2];
+release = sort(release); % m/d
+maxK = zeros(numRuns,length(release));
+mar = zeros(numTime,1);
+for i = 1:length(release)
+    [maxK(:,i), mar]  = sequent_peak(inflow, release(i), 6);
+end
+
+% Plot storage yield curve
+figure
+subplot(1,2,1)
+plot(maxK/1E6, release, 'k')
+hold on
+line([0 max(max(maxK/1E6))], [mar mar], 'Color', 'r', 'LineStyle', '-.')
+scatter([0 0], [release1, release2], '*', 'MarkerEdgeColor', [.5 0 .5])
+hold on
+line([0 storage1], [release1 release1], 'Color', [.5 0 .5])
+line([storage1 storage1], [release1 0], 'Color', [.5 0 .5])
+line([0 storage2], [release2 release2], 'Color', [.5 0 .5])
+line([storage2 storage2], [release2 0], 'Color', [.5 0 .5])
+ylabel('Yield [MCM/y]')
+xlabel('Storage [MCM]')
+ax = gca;
+ax.YAxis.Exponent = 0;
+ytickformat('%,4.4g')
+
+subplot(1,2,2)
+Q = inflow * 60 * 60 * 24; %m3/d
+plot(Q);
+hold on
+[~,len] = size(inflow);
+line([0 len], [mar, mar], 'LineStyle', '-.','Color', 'r')
+line([0 len], [release1, release1], 'LineStyle', '-.','Color', [.5 0 .5])
+line([0 len], [release2, release2], 'LineStyle', '-.','Color', [.5 0 .5])
+legend('Streamflow', 'MAR', 'Design Yield')
+end
+
+
+%% Save data for Ken
+
+strflw_obs = reshape(streamflow',1,[]) ;
+strflw_pton = runoff_pton/1E3 * area /24 /60 /60;
+save('Storage_yield_data_for_Ken', 'strflw_obs', 'strflw_pton', 'release1', 'release2')
+
+%%  Sequent peak take two
+
+load('historical data')
+inflow_cmps = Mon2TS(streamflow);
+inflow_cmpd = cmps2cmpd(inflow_cmps');
+inflow_cmpm = cmpd2cmpm(inflow_cmpd,6);
+release_cmpd = repmat(186000,1,length(inflow_cmpm));
+release_cmpm = cmpd2cmpm(release_cmpd,6);
+[maxK_cmpm, K_cmpm] = sequent_peak2(inflow_cmpm, release_cmpm); % input cmpm, get cmpm
+maxK_mcm = maxK_cmpm/1E6
+data = [release_cmpm' inflow_cmpm'];
+
+
+
     
 %% Plots
 
@@ -190,13 +320,35 @@ er = pet_hg - PET_date;
 sq_er = er .^ 2;
 mean_sq_er = mean(mean(sq_er));
 rmse = sqrt(mean_sq_er);
-end
 
-% Plot storage yield curve
+
+% Plot water balance in mm/d
 figure
-plot(maxK, release)
+subplot(1,2,1)
+bar(1:168, PRECIP_0, 'b')
 hold on
-line([0 max(max(maxK))], [mar mar])
-ylabel('Yield')
-xlabel('Storage')
+plot(1:168, runoff_mwache, 'g', 'LineWidth', 2)
+plot(1:168, PET_date_lin', 'k', 'LineWidth', 2)
+legend('P','Streamflow', 'PET')
+ax = gca;
+ax.XTick = 8:12:12*14;
+ax.XTickLabels = num2cell(1977:1990);
+ylabel('mm/d')
+ylim([0 20])
+title('measured')
+
+subplot(1,2,2)
+bar(1:168, P_pton, 'b')
+hold on
+plot(1:168, runoff_pton, 'g', 'LineWidth', 2)
+plot(1:168, E_pton', 'k', 'LineWidth', 2)
+legend('P','Streamflow', 'PET')
+ax = gca;
+ax.XTick = 8:12:12*14;
+ax.XTickLabels = num2cell(1977:1990);
+ylabel('mm/d')
+ylim([0 20])
+title('princeton')
+
+end
 
