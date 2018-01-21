@@ -1,15 +1,15 @@
 
 % CALIBRATION RESULTS
 
-postProcess = true;
+postProcess = false;
 if postProcess 
     
     global PRECIP_0 OBS NYRS PET % DATA INPUT
     global precip_day % CALCULTED VALUES
     global ku kp kl sat lm inter over % MODEL PARAMETERS
     
-    usePton = true;
-    MTHavgCalib = 1; % 1 monthly mean, 0 individual points
+    usePton = false;
+    MTHavgCalib = 0; % 1 monthly mean, 0 individual points
     
     load('InputData/Mwache_hydro_data')
     x = X_results;

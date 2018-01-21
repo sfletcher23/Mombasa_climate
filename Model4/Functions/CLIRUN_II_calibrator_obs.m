@@ -4,7 +4,7 @@ function [] = CLIRUN_II_calibrator_obs(~,~,init,~,MTHavgCalib)
 
 % Input data
 
-usePton = true;
+usePton = false;
 wideParam = false;
 
 %load(dataFN) 

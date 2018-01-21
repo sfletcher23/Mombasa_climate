@@ -39,8 +39,8 @@ for(Senario_Number=1:1)
 
 start = 1962;
 
-load('OutputData/data/16_Jan_2018_14_20_14_Pton_point_normparam.mat', '-regexp', 'X_results')
-load('InputData/Mwache_hydro_data')
+load('OutputData/data/16_Jan_2018_13_51_42_Pton_point_norm.mat', '-regexp', 'X_results')
+load('Mwache_hydro_data')
 PRECIPTS = P_1962_2012';
 TEMPTS = T_1962_2012';
 TRANGETS = Tmax_1962_2012' - Tmin_1962_2012';

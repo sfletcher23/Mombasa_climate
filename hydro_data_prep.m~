@@ -28,6 +28,9 @@ P0_76_to_90 = P0_month(index76:index90,:);
 datestart = (1976-1901)*12 + 6; 
 dateend = (1990-1901)*12 + 5;
 
+datestart2 = (1962-1901)*12 + 6; 
+dateend2 = (2012-1901)*12 + 5;
+
 P0_date_lin = P0(datestart:dateend);
 P0_date = reshape(P0_date_lin, 12, [])';
 
@@ -43,6 +46,12 @@ Tmax_date =  reshape(Tmax_date_lin, 12, [])';
 PET_date_lin = PET(datestart:dateend);
 PET_date = reshape(PET_date_lin, 12, [])';
 
+P_1962_2012 = P0(datestart2:dateend2);
+T_1962_2012 = T0(datestart2:dateend2);
+Tmin_1962_2012 = Tmin(datestart2:dateend2);
+Tmax_1962_2012 = Tmax(datestart2:dateend2);
+PET_1962_2012 = PET(datestart2:dateend2);
+
 %% Calcuate PET using Modified Hargreaves
 
 lat = -3.96;   % Approx lat at proposed dam site
@@ -56,7 +65,8 @@ pet_hg = ModHargreaves4(ones(14,1)*lat,watyear,temp,temprange,prec);
 area = 2250 * 1E6; %m2
 runoff = reshape(streamflow',1,[]) * 60 * 60 * 24  / area; % converting from m3/s to m3/d and dividing by area
 runoff_mwache = runoff * 1E3; % Converting from m/d to mm/d;
-save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'runoff_mwache', 'streamflow')
+save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'runoff_mwache', ...
+    'streamflow', 'P_1962_2012', 'T_1962_2012', 'Tmax_1962_2012', 'Tmin_1962_2012', 'PET_1962_2012')
 
 %% Convert P to mm/d
 days = [31 28 31 30 31 30 31 31 30 31 30 31];% CRU -JAN- DEC ;
@@ -66,7 +76,30 @@ NYRS = 14;
 months = NYRS*12;
 PRECIP_0 = P0_date_lin' ./ repmat(days_adj,1,NYRS); % Convert from mm/m to mm/day
 
+%% Load CLIRUN simulated streamflow
+
+load('Mwache_sim_strflw_1962to2012_ptonmod3')
+inflow = ROresults/1E3; % mm/d to m/d
+inflow = inflow * area; % m3/d
+inflow_mcmpy = cmpd2mcmpy(inflow);
+mar_mcmpy = mean(sum(TS2Mon(inflow_mcmpy),2))
+% figure; plot(inflow_mcmpy)
+[f,x] = ecdf(log(inflow_mcmpy));
+% figure; plot(flipud(f),x)
+ylabel('log flow (MCM/y)')
+xlabel('prob excedance')
+inflow = TS2Mon(inflow_mcmpy);
+[numYears,~] = size(inflow);
+release = ones(1,12) * 69;
+for i = 1:numYears
+    maxK(i) = sequent_peak2(inflow(i,:), release);
+end
+maxK_sorted = sort(maxK);
+maxK_p90 = maxK_sorted(45)
+
 %% Calculate storage-yield curve using sequent-peak algorithm
+
+if false
 
 load('Mwache_hydro_pton')
 P_pton(118) = (P_pton(117) + P_pton(119)) / 2;
@@ -74,10 +107,12 @@ E_pton(118) = (E_pton(117) + E_pton(119)) / 2;
 runoff_pton(118) = (runoff_pton(117) + runoff_pton(119)) / 2;
 
 %inflow = cell(1,4);
-inflow = reshape(streamflow',1,[]) ; % m3/s whole time series as one run
+% inflow = reshape(streamflow',1,[]) ; % m3/s whole time series as one run
 % inflow = streamflow; % individual years
 % inflow = runoff_pton/1E3 * area /24 /60 /60; % m3/s 
 % inflow = reshape(runoff_pton,12,14)'/1E3 * area /24 /60 /60;
+inflow = ROresults * area /24 /60 /60; % m3/s
+
 
 [numRuns,numTime] = size(inflow);
 maxRelease = mean(inflow* 60 * 60 * 24);
@@ -139,57 +174,13 @@ line([0 len], [release1, release1], 'LineStyle', '-.','Color', [.5 0 .5])
 line([0 len], [release2, release2], 'LineStyle', '-.','Color', [.5 0 .5])
 legend('Streamflow', 'MAR', 'Design Yield')
 
-% Annual
-if false
-
-[numRuns,numTime] = size(inflow);
-maxRelease = mean(inflow* 60 * 60 * 24);
-release = 0:maxRelease/25:maxRelease;
-release1 = 186000;
-release2 = 220000;
-release = [release release1 release2];
-release = sort(release); % m/d
-maxK = zeros(numRuns,length(release));
-mar = zeros(numTime,1);
-for i = 1:length(release)
-    [maxK(:,i), mar]  = sequent_peak(inflow, release(i), 6);
 end
-
-% Plot storage yield curve
-figure
-subplot(1,2,1)
-plot(maxK/1E6, release, 'k')
-hold on
-line([0 max(max(maxK/1E6))], [mar mar], 'Color', 'r', 'LineStyle', '-.')
-scatter([0 0], [release1, release2], '*', 'MarkerEdgeColor', [.5 0 .5])
-hold on
-line([0 storage1], [release1 release1], 'Color', [.5 0 .5])
-line([storage1 storage1], [release1 0], 'Color', [.5 0 .5])
-line([0 storage2], [release2 release2], 'Color', [.5 0 .5])
-line([storage2 storage2], [release2 0], 'Color', [.5 0 .5])
-ylabel('Yield [MCM/y]')
-xlabel('Storage [MCM]')
-ax = gca;
-ax.YAxis.Exponent = 0;
-ytickformat('%,4.4g')
-
-subplot(1,2,2)
-Q = inflow * 60 * 60 * 24; %m3/d
-plot(Q);
-hold on
-[~,len] = size(inflow);
-line([0 len], [mar, mar], 'LineStyle', '-.','Color', 'r')
-line([0 len], [release1, release1], 'LineStyle', '-.','Color', [.5 0 .5])
-line([0 len], [release2, release2], 'LineStyle', '-.','Color', [.5 0 .5])
-legend('Streamflow', 'MAR', 'Design Yield')
-end
-
 
 %% Save data for Ken
 
-strflw_obs_cmps = reshape(streamflow',1,[]) ;
-strflw_pton_runoff = runoff_pton/1E3 * area /24 /60 /60;
-save('Storage_yield_data_for_Ken', )
+strflw_obs = reshape(streamflow',1,[]) ;
+strflw_pton = runoff_pton/1E3 * area /24 /60 /60;
+save('Storage_yield_data_for_Ken', 'strflw_obs', 'strflw_pton', 'release1', 'release2')
 
 %%  Sequent peak take two
 
@@ -208,7 +199,7 @@ data = [release_cmpm' inflow_cmpm'];
     
 %% Plots
 
-if true
+if false
 % Historical P, T, streamflow
 figure
 subplot(3,2,1)
