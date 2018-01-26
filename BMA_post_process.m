@@ -1,22 +1,25 @@
 %% BMA post processing
 
 
-% NU and MU matrices are numSamples (10000) x numDecades (10) x numScenarios (9)
+% NU and MU matrices are numSamples (10000) x numDecades (10) x numScenarios (3)
 
 %% Trace plots
 
 decades = {'1980-2000', '1990-2010', '2000-2020', '2010-2030', '2020-2040', ...
     '2030-2050', '2040-2060', '2050-2070', '2060-2080', '2070-2090'};
 
+NumScenarios = 3;
+saveOn = true;
+
 % Future precip
 if true
-for j = 1:9 % make a new figure for each scenario
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        plot(1:1000,NU_futPrec(:,i,j))
+        plot(1:1000,NUP(:,i,j))
         title(decades{i})
-        ylim([0, 300])
+        ylim([0, 100])
         if i == 1 || i == 6
             ylabel('P (mm)')
         end
@@ -24,19 +27,23 @@ for j = 1:9 % make a new figure for each scenario
             xlabel('iteration')
         end
     end
-    suptitle(strcat('Future P Trace Plot: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Future P Trace Plot: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(gcf, strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 end
 
 % Future temp
 if true
-for j = 1:9 % make a new figure for each scenario
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        plot(1:1000,NU_futTemp(:,i,j))
+        plot(1:1000,NUT(:,i,j))
         title(decades{i})
-        ylim([26, 31])
+        ylim([23, 31])
         if i == 1 || i == 6
             ylabel('T (degrees C)')
         end
@@ -44,19 +51,23 @@ for j = 1:9 % make a new figure for each scenario
             xlabel('iteration')
         end
     end
-    suptitle(strcat('Future T Trace Plot: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Future T Trace Plot: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 end
 
 % Hist precip
-if false
-for j = 1:9 % make a new figure for each scenario
+if true
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        plot(1:1000,MU_HistPrec(:,i,j))
+        plot(1:1000,MUP(:,i,j))
         title(decades{i})
-        ylim([0, 300])
+        ylim([0, 100])
         if i == 1 || i == 6
             ylabel('P (mm)')
         end
@@ -64,17 +75,21 @@ for j = 1:9 % make a new figure for each scenario
             xlabel('iteration')
         end
     end
-    suptitle(strcat('Hist P Trace Plot: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Hist P Trace Plot: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 end
 
 % Hist temp
-if false
-for j = 1:9 % make a new figure for each scenario
+if true
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        plot(1:1000,MU_HistTemp(:,i,j))
+        plot(1:1000,MUT(:,i,j))
         title(decades{i})
         ylim([20, 31])
         if i == 1 || i == 6
@@ -84,7 +99,11 @@ for j = 1:9 % make a new figure for each scenario
             xlabel('iteration')
         end
     end
-    suptitle(strcat('Hist T Trace Plot: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Hist T Trace Plot: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 end
 
@@ -99,12 +118,16 @@ i = 10; % Decade 1
 k = 9; % Deacde 2
 figure;
 subplot(2,1,1)
-plot(sampleIndex, NU_futPrec(sampleIndex,i,j),'-o')
+plot(sampleIndex, NUP(sampleIndex,i,j),'-o')
 title(decades{i})
 subplot(2,1,2)
-plot(sampleIndex, NU_futPrec(sampleIndex,k,j),'-o')
+plot(sampleIndex, NUP(sampleIndex,k,j),'-o')
 title(decades{k})
-suptitle(strcat('Zoomed trace plot fut P scenario:', num2str(j)))
+ttl = strcat('Zoomed trace plot fut P scenario:', num2str(j));
+suptitle(ttl)
+if saveOn
+    savefig(strcat('BMA_analysis_', date, '/', ttl))
+end
 % I played around with looking at different decades and scenarios - can
 % really see the 21-step cycle. Although it doesn't draw the same exaclty values each time -
 % suggests it is cycling through the models in a purely deterministic
@@ -116,12 +139,16 @@ sampleIndex = 900:1000; % Using a subset of the samples for better visualization
 j = 1; % Scenario 5
 figure;
 subplot(2,1,1)
-plot(sampleIndex, NU_futTemp(sampleIndex,i,j),'-o')
+plot(sampleIndex, NUT(sampleIndex,i,j),'-o')
 title(decades{i})
 subplot(2,1,2)
-plot(sampleIndex, NU_futTemp(sampleIndex,k,j),'-o')
+plot(sampleIndex, NUT(sampleIndex,k,j),'-o')
 title(decades{k})
-suptitle(strcat('Zoomed trace plot fut T scenario 5:', num2str(j)))
+ttl = strcat('Zoomed trace plot fut T scenario 5:', num2str(j));
+suptitle(ttl)
+if saveOn
+    savefig(strcat('BMA_analysis_', date, '/', ttl))
+end
 % Can clearly see the difference between cycle and non-cycle
 
 
@@ -131,25 +158,33 @@ step = 1; % Increase the step to discard more of the samples
 sampleIndex = 1:step:1000; 
 
 % Future precip
-for j = 1:9 % make a new figure for each scenario
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        autocorr(NU_futPrec(sampleIndex,i,j),44)
+        autocorr(NUP(sampleIndex,i,j),44)
         title(decades{i})
     end
-    suptitle(strcat('Future P Autocorrelation: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Future P Autocorrelation: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 
 % Future temp
-for j = 1:9 % make a new figure for each scenario
+for j = 1:NumScenarios % make a new figure for each scenario
     figure;
     for i = 1:10 % make a new subplot for each decade
         subplot(2,5,i)
-        autocorr(NU_futTemp(sampleIndex,i,j), 44)
+        autocorr(NUT(sampleIndex,i,j), 44)
         title(decades{i})
     end
-    suptitle(strcat('Future T Autocorrelation: Scenario:', ' ', num2str(j)))
+    ttl = strcat('Future T Autocorrelation: Scenario:', ' ', num2str(j));
+    suptitle(ttl)
+    if saveOn
+        savefig(strcat('BMA_analysis_', date, '/', ttl))
+    end
 end
 
 

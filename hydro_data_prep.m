@@ -76,21 +76,22 @@ NYRS = 14;
 months = NYRS*12;
 PRECIP_0 = P0_date_lin' ./ repmat(days_adj,1,NYRS); % Convert from mm/m to mm/day
 
-%% Load CLIRUN simulated streamflow
+%% Load CLIRUN simulated streamflow, use Sequent peak
 
 load('Mwache_sim_strflw_1962to2012_ptonmod3')
+%load('Mwache_sim_strflw_1962_2012_obs')
 inflow = ROresults/1E3; % mm/d to m/d
 inflow = inflow * area; % m3/d
 inflow_mcmpy = cmpd2mcmpy(inflow);
 mar_mcmpy = mean(sum(TS2Mon(inflow_mcmpy),2))
-% figure; plot(inflow_mcmpy)
+figure; plot(inflow_mcmpy)
 [f,x] = ecdf(log(inflow_mcmpy));
-% figure; plot(flipud(f),x)
+figure; plot(flipud(f),x)
 ylabel('log flow (MCM/y)')
 xlabel('prob excedance')
 inflow = TS2Mon(inflow_mcmpy);
 [numYears,~] = size(inflow);
-release = ones(1,12) * 69;
+release = ones(1,12) * 70;
 for i = 1:numYears
     maxK(i) = sequent_peak2(inflow(i,:), release);
 end
