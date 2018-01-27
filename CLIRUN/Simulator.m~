@@ -18,7 +18,7 @@ addpath('Functions')
 % 'miroc3_2_medres','mpi_echam5','mri_cgcm2_3_2a','ncar_ccsm3_0' ...
 % 'ncar_pcm1','ukmo_hadcm3','ukmo_hadgem1'}
 
-dispOn = false;
+dispOn = 1;
 makePet = true;
 
 
@@ -100,7 +100,7 @@ for bas=1:nbasins
     precip_day = inter*PRECIP_0;
     
     Tspan= (0:months)';
-    Tspan = [0:months-1 months-.1]';
+    Tspan = (0:months)'
     options = odeset('NonNegative',[1 2]);
     [Tvec,xsol]=ode45('soil_model_II',Tspan,[5,.1,0.0,0.0], options);%JMS-mod**
     

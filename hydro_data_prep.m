@@ -79,19 +79,26 @@ PRECIP_0 = P0_date_lin' ./ repmat(days_adj,1,NYRS); % Convert from mm/m to mm/da
 %% Load CLIRUN simulated streamflow, use Sequent peak
 
 load('Mwache_sim_strflw_1962to2012_ptonmod3')
-%load('Mwache_sim_strflw_1962_2012_obs')
+load('Mwache_sim_strflw_1962_2012_obs')
+
 inflow = ROresults/1E3; % mm/d to m/d
+% select only data since 1970s
+if true
+    inflow = inflow((1976-1962)*12+1:end);
+end
 inflow = inflow * area; % m3/d
 inflow_mcmpy = cmpd2mcmpy(inflow);
 mar_mcmpy = mean(sum(TS2Mon(inflow_mcmpy),2))
+if true
 figure; plot(inflow_mcmpy)
 [f,x] = ecdf(log(inflow_mcmpy));
 figure; plot(flipud(f),x)
 ylabel('log flow (MCM/y)')
 xlabel('prob excedance')
+end
 inflow = TS2Mon(inflow_mcmpy);
 [numYears,~] = size(inflow);
-release = ones(1,12) * 70;
+release = ones(1,12) * 55;
 for i = 1:numYears
     maxK(i) = sequent_peak2(inflow(i,:), release);
 end
@@ -128,14 +135,7 @@ for i = 1:length(release)
     [maxK(:,i), mar]  = sequent_peak(inflow, release(i), 6);
 end
 
-if false
-% Calculate inverse of sequent-peak
-syms  x
-sqpk = @(x) sequent_peak(inflow, x, 6);
-storage = 200E6;
-eqn = storage == sqpk(x);
-solx = solve(eqn, x);
-end
+
 
 % Get yield at specified release values
 index1 = find(release == release1);
