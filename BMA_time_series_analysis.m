@@ -33,23 +33,27 @@ decades = {'2000-2009', '2010-2019', '2020-2029', '2030-2039', '2040-2049', ...
 
 %% Plot sample time series, no change (scen4)
 
-if false
+if true
     figure;
     for i = 1:numDecades
         subplot(5, 2, i)
         mean_P = mean(mean(P_ts(:,:,i,4)));
+        std_P = std(mean(P_ts(:,:,i,4)));
         plot(1:numMonths, P_ts(:,1:10,i,4))
         ylim([0 400])
-        title(strcat(decades{i}, {' '}, 'Mean P:', {' '}, num2str(mean_P, '%.1f')))
+        title(strcat(decades{i}, {' '}, 'Mean P:', {' '}, num2str(mean_P, '%.1f') ...
+            , {' '}, 'Std:', {' '}, num2str(std_P, '%.1f')))
     end
 
     figure;
     for i = 1:numDecades
         subplot(5, 2, i)
         mean_T = mean(mean(T_ts(:,:,i,4)));
+        std_T = std(mean(T_ts(:,:,i,4)));
         plot(1:numMonths, T_ts(:,1:10,i,4))
         ylim([22 30])
-        title(strcat(decades{i}, {' '}, 'Mean T:', {' '}, num2str(mean_T, '%.1f')))
+        title(strcat(decades{i}, {' '}, 'Mean T:', {' '}, num2str(mean_T, '%.1f') ...
+            , {' '}, 'Std:', {' '}, num2str(std_T, '%.1f')))
     end
 end
 %% Use ClIRUN to calculate streamflow
@@ -75,14 +79,14 @@ mar_mcmpy = mean(mean(streamflow_mcmpy));
 yield = zeros(numSamples,1);
 for i = 1:numSamples
     inflow = streamflow_mcmpy(i,:);
-    yield(i) = strmflw2yld(inflow, storage);
+    yield(i) = strmflw2yfrmld(inflow, storage);
 end
 avg_yield = mean(yield)
 
 if true
     load('historical data', 'streamflow')
     hist_strflw = Mon2TS(streamflow);
-    hist_yield = strmflw2yld(inflow, storage)
+    hist_yield = strmflw2frmyld(inflow, storage)
 end
 
 
