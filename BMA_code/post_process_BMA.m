@@ -1,11 +1,12 @@
 %% Post processing BMA data
 
-% Which files to open - need to set this every run
-dateOpen = '2018-01-28';
+% Which files to open - need to set this every run !!!
+dateOpen = '2018-01-29';
 % Need to input jobid of T and P runs if running on cluster
-if exist(getenv('SLURM_JOB_ID'))
-    jobIdT = 12345;
-    jobIdP = 12345;
+jobid = (getenv('SLURM_JOB_ID'));
+if ~isempty(jobid)
+    jobIdT = num2str(59932);
+    jobIdP = num2str(59931);
 else
     jobIdT = '';
     jobIdP = '';
@@ -18,20 +19,20 @@ make_plots = false;
 %% Reading R Output and creating time series 
 if reading_Routput
 
-    for scen_ii = 1%:3
+    for scen_ii = 1:3
 %         filepath = scen_dir_names{scen_ii};
 %         if ~exist(filepath,'dir') %if doesn't exist
 %             mkdir(filepath)
 %         end
 %         close all
         time_ii = 0;
-        for year = 2020%:10:2090
+        for year = 2000:10:2090
             time_ii = time_ii+1;
-            tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
-            tmp = csvread(tmpstr);
+            tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv')
+	    tmp = csvread(tmpstr);
             MUT(:,time_ii,scen_ii) = tmp;
 
-            tmpstr = strcat('Output/',sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
+            tmpstr = strcat('Output/',sprintf('nuUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
             tmp = csvread(tmpstr); 
             NUT(:,time_ii,scen_ii) = tmp; 
 
@@ -39,7 +40,7 @@ if reading_Routput
             tmp = csvread(tmpstr);
             MUP(:,time_ii,scen_ii) = exp(tmp);
 
-            tmpstr = strcat('Output/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpen,'_.csv')
+            tmpstr = strcat('Output/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpen,'_.csv');
             tmp = csvread(tmpstr); 
             NUP(:,time_ii,scen_ii) = exp(tmp); 
         end
