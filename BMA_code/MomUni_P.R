@@ -1,7 +1,7 @@
 
 # Set working directory: two options depending whether on svante
 if (exists("SLURM_NTASKS_PER_NODE", mode="environment")) {
-  setwd("~/net/fs02/d2/sfletch/Mombasa_climate/BMA_code")
+  #setwd("~/net/fs02/d2/sfletch/Mombasa_climate/BMA_code")
 } else {
   setwd("~/Documents/MATLAB/Mombasa_Climate/BMA_code")
 }

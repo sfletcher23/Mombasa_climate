@@ -1,10 +1,6 @@
 %% Post processing BMA data
 
-reading_Routput = true;
-create_timeseries = true;
-make_plots = false;
-
-% Which files to open
+% Which files to open - need to set this every run
 dateOpen = '2018-01-28';
 % Need to input jobid of T and P runs if running on cluster
 if exist(getenv('SLURM_JOB_ID'))
@@ -14,6 +10,10 @@ else
     jobIdT = '';
     jobIdP = '';
 end
+
+reading_Routput = true;
+create_timeseries = true;
+make_plots = false;
 
 %% Reading R Output and creating time series 
 if reading_Routput
