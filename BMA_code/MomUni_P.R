@@ -1,17 +1,20 @@
+# Get environment var from Slurm
+JOBID = Sys.getenv("SLURM_JOB_ID")
 
-# Set working directory: two options depending whether on svante
-if (exists("SLURM_NTASKS_PER_NODE", mode="environment")) {
-  #setwd("~/net/fs02/d2/sfletch/Mombasa_climate/BMA_code")
+# Check if on Slurm. If not, set working directory
+if (JOBID != "") {
+  cat("Slurm Job ID Found")
 } else {
   setwd("~/Documents/MATLAB/Mombasa_Climate/BMA_code")
+  cat("Slurm Job ID Not Found")
 }
 
 source("./REA.Gibbs.r")
-install.packages("foreach")
+install.packages("foreach", repos = "http://cran.us.r-project.org")
 library(foreach)
 
 # Need to use this package for the dopar commands to work
-install.packages("doParallel")
+install.packages("doParallel", repos = "http://cran.us.r-project.org")
 library(doParallel)
 
 #[1] 22 21
@@ -20,18 +23,12 @@ tmp = read.csv("Input/lambda0.csv",header = FALSE)
 lambda0 = as.matrix(tmp)
 
 # Set up the parallelization. If running on slurm, use the number of cores available in the job. If running on desktop, use 2. 
-if (exists("SLURM_NTASKS_PER_NODE", mode="environment")) {
+if (JOBID != "") {
   registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
 } else {
   registerDoParallel(cores=2)
 }
 
-# If running on svante, get jobid for name of file when saving
-if (exists("SLURM_JOB_ID", mode="environment")) {
-  jobid = Sys.getenv("SLURM_JOB_ID")
-} else {
-  jobid = ""
-}
 # Get date for file save name
 currentDate = Sys.Date()
 
@@ -53,8 +50,8 @@ foreach (scen_ii = 1:2) %dopar%{
     X0P = tmp[c(ii),c(scen_ii)]
     REA.Gibbs(X[c(2),],X0P[c(1)],lambda0[c(2)],Y[c(2),],N=1000)->rg0
     
-    mu0str = paste(sprintf("Output/muUP_%d_scen%d",yearY,scen_ii),"job", jobid, currentDate, ".csv", sep="_")
-    nu0str = paste(sprintf("Output/nuUP_%d_scen%d",yearY,scen_ii),"job", jobid, currentDate, ".csv", sep="_")
+    mu0str = paste(sprintf("Output/muUP_%d_scen%d",yearY,scen_ii),"job", JOBID, currentDate, ".csv", sep="_")
+    nu0str = paste(sprintf("Output/nuUP_%d_scen%d",yearY,scen_ii),"job", JOBID, currentDate, ".csv", sep="_")
     write.table(rg0$mu, file = mu0str,row.names=FALSE, col.names=FALSE)
     write.table(rg0$nu, file = nu0str,row.names=FALSE, col.names=FALSE)
   }
