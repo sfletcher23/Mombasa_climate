@@ -26,6 +26,8 @@ if rewrite_XYlambda
 
     % Saving variables for R code: 
     csvwrite('Input/lambda0.csv',lambda0)
+    csvwrite('Input/Tij.csv',Tij)
+    csvwrite('Input/Pij.csv',Pij)
     
     for decade = 1:11
         X = [mean(YTij(10*(decade-1)+80:10*(decade-1)+100,:),1)', mean(YPij(10*(decade-1)+80:10*(decade-1)+100,:),1)']';

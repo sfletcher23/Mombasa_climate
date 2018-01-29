@@ -25,13 +25,13 @@ if reading_Routput
 %         end
 %         close all
         time_ii = 0;
-        for year = 2000%:10:2090
+        for year = 2020%:10:2090
             time_ii = time_ii+1;
             tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
             tmp = csvread(tmpstr);
             MUT(:,time_ii,scen_ii) = tmp;
 
-            tmpstr = strcat('Output/',sprintf('mnUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
+            tmpstr = strcat('Output/',sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpen,'_.csv');
             tmp = csvread(tmpstr); 
             NUT(:,time_ii,scen_ii) = tmp; 
 
@@ -39,7 +39,7 @@ if reading_Routput
             tmp = csvread(tmpstr);
             MUP(:,time_ii,scen_ii) = exp(tmp);
 
-            tmpstr = strcat('Output/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpen,'_.csv');
+            tmpstr = strcat('Output/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpen,'_.csv')
             tmp = csvread(tmpstr); 
             NUP(:,time_ii,scen_ii) = exp(tmp); 
         end
@@ -104,6 +104,8 @@ end
     % more efficient, but this is definitely a small piece of the overall
     % cpu time so prob not worth worrying 
 if create_timeseries
+    Tij = csvread('Input/Tij.csv');
+    Pij = csvread('Input/Pij.csv');
     for decade = 1:20
         for model = 1:21    
             Tmean = mean(Tij(120*(decade-1)+1:120*decade,model)); %decadal mean
@@ -136,5 +138,5 @@ if create_timeseries
             end
         end
     end
-    save(saveName,'T_timeseries','P_timeseries')
+    save(saveName,'T_timeseries','P_timeseries','MUP','MUT','NUT','NUP', 'jobIdT', 'jobIdP')
 end
