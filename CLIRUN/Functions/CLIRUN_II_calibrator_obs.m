@@ -144,19 +144,22 @@ for bas=1:1 %nbasins
     end
     toc
     
+    X_results = x;
        
     display('CALIBRATION FINISHED');
     disp(['> Finished At: ',datestr( now )]);
     disp(['coeff: ',num2str(x,'%10.2e')]);
     timeElapsed=toc;
     
+    datetime=datestr(now);
+    datetime=strrep(datetime,':','_'); %Replace colon with underscore
+    datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
+    datetime=strrep(datetime,' ','_');%Replace space with underscore
+    save(['OutputData/data/',datetime,'.mat'],'X_results');
+    
      display_calibration_obs; 
      %display_calibration_UNH;
     
 end
-  datetime=datestr(now);
-datetime=strrep(datetime,':','_'); %Replace colon with underscore
-datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
-datetime=strrep(datetime,' ','_');%Replace space with underscore
-  save(['OutputData/data/',datetime,'.mat'],'X_results', 'resultsMAT','xoutMAT');
+  
 

@@ -1,0 +1,11 @@
+# System ignores
+.DS_Store
+
+# MATLAB ignores
+*.m~
+*.mat
+
+# SLURM ignores
+*.sh
+
+*.csv

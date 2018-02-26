@@ -4,6 +4,9 @@ global precip_day PET % CALCULTED VALUES
 global ku  kp  kl lm  sat over % MODEL PARAMETERS
 
 T=floor(t) + 1;
+if t == 168
+    T = 168;
+end
 
 %pp= precip_day(T);
 p= precip_day(T);

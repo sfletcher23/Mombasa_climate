@@ -57,7 +57,8 @@ if true
     end
 end
 %% Use ClIRUN to calculate streamflow
-calibrationFile = '16_Jan_2018_14_39_45_ogdata_point_normparam.mat';
+calibrationFile = '16_Jan_2018_14_39_45_ogdata_point_normparam_1';
+calibrationFile = '29_Jan_2018_17_10_19_maybe_winner_3.mat';
 load(strcat('CLIRUN/OutputData/data/',calibrationFile), 'X_results')
 
 streamflow_mmpd = zeros(numSamples,numMonths);
@@ -72,25 +73,59 @@ area = 2250 * 1E6; %m2
 streamflow_cmpd = streamflow_mmpd /1E3 * area;
 streamflow_mcmpy = cmpd2mcmpy(streamflow_cmpd);
 figure;
-plot(streamflow_mcmpy)   
+plot(streamflow_mcmpy(1:10,:)')   
 mar_mcmpy = mean(mean(streamflow_mcmpy));
-%% Compare estimates for firm yield from current no change scenario to historical
+%% Compare estimates for firm yield and yield from current no change scenario to historical
 
-yield = zeros(numSamples,1);
+% Firm yield
+storage = 120;
+fyield = zeros(numSamples,1);
 for i = 1:numSamples
     inflow = streamflow_mcmpy(i,:);
-    yield(i) = strmflw2yfrmld(inflow, storage);
+    fyield(i) = strmflw2frmyld(inflow, storage);
 end
-avg_yield = mean(yield)
-
-if true
-    load('historical data', 'streamflow')
-    hist_strflw = Mon2TS(streamflow);
-    hist_yield = strmflw2frmyld(inflow, storage)
-end
+avg_fyield = mean(fyield)
 
 
+load('Mwache_hydro_data', 'runoff_mwache', 'P0_date_lin', 'T0_date_lin')
+hist_strflw = runoff_mwache /1E3 * area * 365 / 1E6; % convert from mm/d to mcm/y
+hist_fyield = strmflw2frmyld(hist_strflw, storage)
 
+% Yield simulations
+
+[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = inflow2yield(hist_strflw, T0_date_lin', P0_date_lin', storage);
+figure; 
+subplot(2,1,2)
+bar([yield_mdl; unmet_dom_mdl; unmet_ag_mdl]', 'stacked');
+hold on
+plot(dmd, 'LineWidth', 1.5)
+xlim([0 length(hist_strflw)])
+legend('Yield', 'Unmet domestic', 'Unmet ag', 'Demand')
+subplot(2,1,1)
+hold on
+plot(K+20, 'LineWidth', 1.5)
+plot(hist_strflw, 'LineWidth', 1.5)
+legend('storage', 'inflow')
+title('historical inflow')
+xlim([0 length(hist_strflw)])
+
+
+i = randi(numSamples);
+[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = inflow2yield(streamflow_mcmpy(i,:), T_ts(:,i,1,4)', P_ts(:,i,1,4)', storage);
+figure; 
+subplot(2,1,2)
+bar([yield_mdl; unmet_dom_mdl; unmet_ag_mdl]', 'stacked');
+hold on
+plot(dmd, 'LineWidth', 1.5)
+xlim([0 length(streamflow_mcmpy(i,:))])
+legend('Yield', 'Unmet domestic', 'Unmet ag', 'Demand')
+subplot(2,1,1)
+hold on
+plot(K+20, 'LineWidth', 1.5)
+plot(streamflow_mcmpy(i,:), 'LineWidth', 1.5)
+legend('storage', 'inflow')
+title('simulated inflow')
+xlim([0 length(streamflow_mcmpy(i,:))])
 
 
 

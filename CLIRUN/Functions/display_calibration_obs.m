@@ -1,7 +1,7 @@
 
 % CALIBRATION RESULTS
 
-postProcess = false;
+postProcess = true;
 if postProcess 
     
     global PRECIP_0 OBS NYRS PET % DATA INPUT
@@ -58,6 +58,7 @@ precip_day = inter.*PRECIP_0;
 months = NYRS*12;
 
 Tspan= (0:months)';
+%Tspan = [0:months-1 months-.1]';
 
 options = odeset('NonNegative',[1 2]);
 [Tvec,xsol]=ode45('soil_model_II',Tspan,[5,.1,0.0,0.0], options);%JMS-mod
@@ -78,27 +79,27 @@ options = odeset('NonNegative',[1 2]);
     
     xout(:,2) = OBS;
     
+    
+    % Calculate MAR and yield
+    area = 2250 * 1E6; %m2
+    inflow_obs_mcmpy = xout(:,2)/1E3 * area * 365 / 1E6;
+    inflow_mdl_mcmpy = xout(:,1)/1E3 * area * 365 / 1E6;
+    mar_obs = mean(inflow_obs_mcmpy)
+    mar_mdl = mean(inflow_mdl_mcmpy)
+    storage = 120;
+    yield_mdl = strmflw2frmyld(inflow_mdl_mcmpy, storage)
+    yield_obs = strmflw2frmyld(inflow_obs_mcmpy, storage)
 
     % ESTABLISH THE OBJECTIVE FUNCTION
     
     %To find month difference model v. observed
-    ken  = xout(:,2) - xout(:,1);
-    diff2 = ken.^2;
+    err  = xout(:,2) - xout(:,1);
+    sq_err = err.^2;
+    mean_sq_err = mean(sq_err);
+    rmse_pt = sqrt(mean_sq_err);
     
-    tssum   = sum(diff2);
-    obj =  tssum;
-    
-    if isreal(obj);
-    
-%     display(obj)
-    
-    XX = sum(xout(:,1)); % Model
-    YY = sum(xout(:,2)); % Obs
-    error = (YY-XX)/YY;  % Obs - Model/
-    r2 = 1 - (tssum ./ sum((xout(:,2) - mean(xout(:,2))).^2));
     disp('~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-')
-    disp(['r2 (point): ',num2str(r2)])
-    disp(['Error: ',num2str(error)])
+    disp(['rmse (point): ',num2str(rmse_pt)])
     disp('~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-')
     
         %to plot..TOTAL runoff v. Observes         %JMS
@@ -113,31 +114,22 @@ options = odeset('NonNegative',[1 2]);
    xout1_mean = mean( reshape( xout(:,1),12,[]) , 2 )';%Make monthly mean Model
    xout2_mean = mean( reshape( xout(:,2),12,[]) , 2 )';% 12 monthlty mean obs
    
-   ken  = xout2_mean - xout1_mean;
-    diff2 = ken.^2;
-    tssum   = sum(diff2);
-    obj =  tssum;
-    r2 = 1 - (tssum ./ sum(( xout2_mean - mean( xout2_mean)).^2));
+   err  = xout2_mean - xout1_mean;
+    sq_err = err.^2;
+    mean_sq_err = mean(sq_err);
+    rmse_mn = sqrt(mean_sq_err);
     
-    XX = sum(xout1_mean); % Model
-    YY = sum(xout2_mean); % Obs
-    error = (YY-XX)/YY;  % Obs - Model/
-    r2 = 1 - (tssum ./ sum((xout2_mean - mean(xout2_mean)).^2));
     disp('~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-')
-    disp(['r2 (mean): ',num2str(r2)])
-    disp(['Error: ',num2str(error)])
+    disp(['rmse (mean): ',num2str(rmse_mn)])
     disp('~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-')
     
     subplot(2,1,2)
-   plot(1:12, [xout1_mean; xout2_mean], 'LineWidth', 1),  legend({'Mdl mean R','obs mean R'},'Location', 'northwest'); %JMS
-   xlabel('month'), ylabel('runoff')
-   legend('boxoff')
-   ylim([0 0.8])
-   
-   ans = X_results'
+    b = bar(1:12, [xout1_mean; xout2_mean]'),  legend({'Mdl mean R','obs mean R'},'Location', 'northwest'); %JM
+    xlabel('month'), ylabel('runoff')
+    legend('boxoff')
+    ylim([0 0.8])
+    suptitle(strcat('Mar:', num2str(mar_mdl),{' '}, 'Yld:', num2str(yield_mdl),{' '}, 'RMSE pt:', num2str(rmse_pt),{' '}, 'RMSE mn:', num2str(rmse_mn)))
 
-    else display(bas); display('obj not real');
-    end
     
     if ~postProcess
     saveas(1,['OutputData/plots/calib_','_basin',num2str(bas),'_',flowNames{bas},'.jpg'])

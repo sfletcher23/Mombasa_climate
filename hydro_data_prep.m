@@ -31,6 +31,9 @@ dateend = (1990-1901)*12 + 5;
 datestart2 = (1962-1901)*12 + 6; 
 dateend2 = (2012-1901)*12 + 5;
 
+datestart3 = (2000-1901)*12 + 1; 
+dateend3 = (2009-1901)*12 + 1;
+
 P0_date_lin = P0(datestart:dateend);
 P0_date = reshape(P0_date_lin, 12, [])';
 
@@ -52,6 +55,8 @@ Tmin_1962_2012 = Tmin(datestart2:dateend2);
 Tmax_1962_2012 = Tmax(datestart2:dateend2);
 PET_1962_2012 = PET(datestart2:dateend2);
 
+T_2000_2009 = T0(datestart3:dateend3);
+
 %% Calcuate PET using Modified Hargreaves
 
 lat = -3.96;   % Approx lat at proposed dam site
@@ -65,7 +70,7 @@ pet_hg = ModHargreaves4(ones(14,1)*lat,watyear,temp,temprange,prec);
 area = 2250 * 1E6; %m2
 runoff = reshape(streamflow',1,[]) * 60 * 60 * 24  / area; % converting from m3/s to m3/d and dividing by area
 runoff_mwache = runoff * 1E3; % Converting from m/d to mm/d;
-save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'runoff_mwache', ...
+save('Mwache_hydro_data', 'PET_date_lin', 'P0_date_lin', 'T0_date_lin', 'runoff_mwache', ...
     'streamflow', 'P_1962_2012', 'T_1962_2012', 'Tmax_1962_2012', 'Tmin_1962_2012', 'PET_1962_2012')
 
 %% Convert P to mm/d
@@ -98,21 +103,23 @@ xlabel('prob excedance')
 end
 inflow = TS2Mon(inflow_mcmpy);
 [numYears,~] = size(inflow);
-release = ones(1,12) * 55;
+release = ones(1,12) * 60;
 for i = 1:numYears
     maxK(i) = sequent_peak2(inflow(i,:), release);
 end
 maxK_sorted = sort(maxK);
-maxK_p90 = maxK_sorted(45)
+maxK_p90 = maxK_sorted(round(.9*numYears))
 
 %% Calculate storage-yield curve using sequent-peak algorithm
 
-if false
 
 load('Mwache_hydro_pton')
 P_pton(118) = (P_pton(117) + P_pton(119)) / 2;
 E_pton(118) = (E_pton(117) + E_pton(119)) / 2;
 runoff_pton(118) = (runoff_pton(117) + runoff_pton(119)) / 2;
+if false
+
+
 
 %inflow = cell(1,4);
 % inflow = reshape(streamflow',1,[]) ; % m3/s whole time series as one run
@@ -181,7 +188,7 @@ end
 
 strflw_obs = reshape(streamflow',1,[]) ;
 strflw_pton = runoff_pton/1E3 * area /24 /60 /60;
-save('Storage_yield_data_for_Ken', 'strflw_obs', 'strflw_pton', 'release1', 'release2')
+%save('Storage_yield_data_for_Ken', 'strflw_obs', 'strflw_pton', 'release1', 'release2')
 
 %%  Sequent peak take two
 
@@ -200,7 +207,17 @@ data = [release_cmpm' inflow_cmpm'];
     
 %% Plots
 
-if false
+
+if true
+load('Mwache_hydro_data', 'P0_date_lin')
+P_mcmpy = P0_date_lin/1E3 *12 * area /1E6;
+figure;
+h1 = axes;
+bar(P_mcmpy)
+set(h1, 'Ydir', 'reverse')
+
+% P bar graph    
+    
 % Historical P, T, streamflow
 figure
 subplot(3,2,1)
@@ -316,7 +333,7 @@ rmse = sqrt(mean_sq_er);
 
 % Plot water balance in mm/d
 figure
-subplot(1,2,1)
+% subplot(1,2,1)
 bar(1:168, PRECIP_0, 'b')
 hold on
 plot(1:168, runoff_mwache, 'g', 'LineWidth', 2)
@@ -327,20 +344,21 @@ ax.XTick = 8:12:12*14;
 ax.XTickLabels = num2cell(1977:1990);
 ylabel('mm/d')
 ylim([0 20])
-title('measured')
+title('MAR: 0.14 mm/d  Mean P: 2.59 mm/d  Mean PET: 4.12')
 
-subplot(1,2,2)
-bar(1:168, P_pton, 'b')
-hold on
-plot(1:168, runoff_pton, 'g', 'LineWidth', 2)
-plot(1:168, E_pton', 'k', 'LineWidth', 2)
-legend('P','Streamflow', 'PET')
-ax = gca;
-ax.XTick = 8:12:12*14;
-ax.XTickLabels = num2cell(1977:1990);
-ylabel('mm/d')
-ylim([0 20])
-title('princeton')
+% 
+% subplot(1,2,2)
+% bar(1:168, P_pton, 'b')
+% hold on
+% plot(1:168, runoff_pton, 'g', 'LineWidth', 2)
+% plot(1:168, E_pton', 'k', 'LineWidth', 2)
+% legend('P','Streamflow', 'PET')
+% ax = gca;
+% ax.XTick = 8:12:12*14;
+% ax.XTickLabels = num2cell(1977:1990);
+% ylabel('mm/d')
+% ylim([0 20])
+% title('princeton')
 
 end
 
