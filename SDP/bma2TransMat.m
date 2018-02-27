@@ -57,6 +57,8 @@ T0_ind = randi(M_T,climParam.numSamp_delta2abs,1);
 state_ind_T(:,1) = T0_ind;
 for i = 1:climParam.numSamp_delta2abs
     for t = 1:N
+        find(p(i,t) < cumsum(T_Temp_delta(:,state_ind_T(i,t),t)),1)
+        state_ind_T(i,t+1)
         state_ind_T(i,t+1) = find(p(i,t) < cumsum(T_Temp_delta(:,state_ind_T(i,t),t)),1);
         state_ind_P(i,t+1) = find(p(i,t) < cumsum(T_Precip_delta(:,state_ind_P(i,t),t)),1);
     end
