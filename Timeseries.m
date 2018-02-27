@@ -2,7 +2,7 @@
 % Timeseries for flow model
 
 % creating standardized anomalies relative to decadal average
-load('Mombasa_TandP.mat')
+load('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat')
 if create_timeseries
     for decade = 1:20
         for model = 1:21    

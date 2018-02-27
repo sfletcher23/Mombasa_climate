@@ -1,4 +1,6 @@
-%% Make T_clim and cum_T_clim
+%% BMA samples to transition probabilities and forward simulation of T and P
+
+
 
 
 %% Setup and make delta Transition mats
@@ -14,6 +16,7 @@ P_delta = .02; %mm/m
 s_P = P_min:P_delta:P_max;
 P0 = s_P(15);
 P0_abs = 75;
+M_P = length(s_P);
 
 T_min = 0;
 T_max = 1.5;

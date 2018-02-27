@@ -1,4 +1,9 @@
-%% Make T_clim and cum_T_clim
+%% This code is now defunct
+
+% Used to take BMA samples and generate transition matrices and forward
+% simulations, but now outdated since switching to a delta approach
+
+
 
 
 %% setup and make Transition mats

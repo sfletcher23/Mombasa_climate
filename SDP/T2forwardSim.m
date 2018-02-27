@@ -1,18 +1,28 @@
 
-function [T_over_time, P_over_time] = T2forwardSim(T_Temp, T_Precip, s_P, s_T, N, t_now, T0, P0, numSamp)
+function [T_over_time] = T2forwardSim(T_Temp, s_T, N, t_now, T0, numSamp, randStart)
+
+% Takes transistion matrix T_Temp, starting value, and uses to simulate
+% time series. Variables are notated for temperature but works for precip
+% also.
 
 p = rand(numSamp,N);
-state_ind_P = zeros(numSamp,N-t_now);
-state_ind_T = zeros(numSamp,N-t_now);
-state_ind_P(:,1) = find(P0==s_P);
-state_ind_T(:,1) = find(T0==s_T);
+
+state_ind_T = zeros(numSamp,N-t_now+1);
+M_T = length(s_T);
+if randStart
+    T0_ind = randi(31,numSamp,1);
+    state_ind_T(:,1) = T0_ind;
+else 
+   state_ind_T(:,1) = find(T0==s_T);
+end
 for i = 1:numSamp
-    for t = 1:N-t_now
+    for t = 1:N-t_now+1
         time = t_now + t -1;
-        state_ind_T(i,t+1) = find(p(i,t) < cumsum(T_Temp(:,state_ind_T(i,t),time)),1);
-        state_ind_P(i,t+1) = find(p(i,t) < cumsum(T_Precip(:,state_ind_P(i,t),time)),1);
+        state_ind_T(i,t+1) = find(p(i,t) < cumsum(T_Temp(:,state_ind_T(i,t),time)),1); 
+        
     end
 end
+
 T_over_time = s_T(state_ind_T);
-P_over_time = s_P(state_ind_P);
+
 
