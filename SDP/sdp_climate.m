@@ -4,8 +4,9 @@
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = true;
+runParam.runSDP = false;
 runParam.steplen = 20; 
+runParam.runRunoff = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 10000;
@@ -78,6 +79,8 @@ end
 
 %% Runoff time series for each T,P state
 
+if runParam.runRunoff 
+
 % Generate T and P timeseries based on T and P mean states
 T_ts = cell(M_T,N);
 P_ts = cell(M_P,N);
@@ -109,7 +112,7 @@ for t = 1:N
     end
 end
 
-
+end
 
 %% Backwards Recursion
 
