@@ -14,6 +14,7 @@ runParam.N = 5;
 runParam.runSDP = false;
 runParam.steplen = 20; 
 runParam.runRunoff = true;
+runParam.calcTmat = false;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 10000;
@@ -71,9 +72,13 @@ a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - bui
 
 % Calculate T_clim
 
-load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
-
-[T_Temp, T_Precip, ~, ~, ~, ~] = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam);
+if runParam.calcTmat   
+    load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
+    [T_Temp, T_Precip, ~, ~, ~, ~] = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam);
+    save('T_Temp_Precip', 'T_Temp', 'T_Precip')    
+else
+    load('T_Temp_Precip') 
+end
 
 
 % Prune state space
