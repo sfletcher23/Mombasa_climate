@@ -124,7 +124,13 @@ for t = 1:N
     end
 end
 
-save('runoff_by_state', 'runoff')
+jobid = getenv('SLURM_JOB_ID');
+datetime=datestr(now);
+datetime=strrep(datetime,':','_'); %Replace colon with underscore
+datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
+datetime=strrep(datetime,' ','_');%Replace space with underscore
+savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
+save(savename_runoff, 'runoff')
 
 end
 
