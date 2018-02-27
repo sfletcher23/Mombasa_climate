@@ -69,7 +69,6 @@ a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - bui
   
 %% Calculate climate transition matrix 
 
-
 % Calculate T_clim
 
 load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
