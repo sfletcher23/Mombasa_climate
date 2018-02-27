@@ -16,7 +16,11 @@ startdate = (1990-1900)*12 + 1; % First period starts in 1990
 daterange = (timestep-1)*steplen*12 + startdate: (timestep)*steplen*12 + startdate - 1; % Second period starts in 2010
 
 % Load Pij and Tij
-load('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat', 'Tij', 'Pij')
+if ~isempty(getenv('SLURM_JOB_ID'))
+    load('/net/fs02/d2/sfletch/Mombasa_climate/BMA_code/Input/Mombasa_TandP.mat')
+else
+    load('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat', 'Tij', 'Pij')
+end
 
 % Create standardized anomalies relative to decadal average across all GCMs for the current daterange
 Tmean_gcm = mean(Tij(daterange,:),1);
