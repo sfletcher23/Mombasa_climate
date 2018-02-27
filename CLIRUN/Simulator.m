@@ -10,7 +10,7 @@ global  PRECIP_0% CALCULTED VALUES daily
 global  precip_day days % CALCULTED VALUES 
 global ku  kp  kl lm  sat over
 
-addpath('Functions')
+% addpath('Functions')
 
 % senar={'bccr_bcm2_0','cccma_cgcm3_1','cccma_cgcm3_1_t63','cnrm_cm3' ...
 % 'csiro_mk3_0','csiro_mk3_5','gfdl_cm2_0','gfdl_cm2_1','giss_aom' ...

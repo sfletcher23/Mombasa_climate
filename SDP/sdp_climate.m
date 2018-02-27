@@ -5,9 +5,11 @@
 runParam = struct;
 runParam.N = 5;
 runParam.runSDP = true;
+runParam.steplen = 20; 
 
 climParam = struct;
-climParam.numSampTS = 10000;
+climParam.numSamp_delta2abs = 10000;
+climParam.numSampTS = 1000;
 climParam.checkBins = false;
 
 
@@ -29,6 +31,21 @@ s_T = climParam.T_min: climParam.T_delta: climParam.T_max;
 climParam.T0 = s_T(1);
 climParam.T0_abs = 26;
 M_T = length(s_T);
+
+
+T_abs_max = max(s_T) * N;
+s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
+M_T_abs = length(s_T_abs);
+T_bins = [s_T_abs-climParam.T_delta/2 s_T_abs(end)+climParam.T_delta/2];
+T_Temp_abs = zeros(M_T_abs,M_T_abs,N);
+
+
+P_abs_max = max(s_P) * N;
+s_P_abs = 66:1:97;
+M_P_abs = length(s_P_abs);
+P_bins = [s_P_abs-climParam.P_delta/2 s_P_abs(end)+climParam.P_delta/2];
+T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
+
 
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
@@ -53,26 +70,45 @@ load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
 
 % Prune state space
 for t = 1:N
-    index_s_p_time{t} = ~isnan(T_Precip(1,:,t));
-    index_s_t_time{t} = ~isnan(T_Temp(1,:,t));
+    index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
+    index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
+
 end
 
 
-% % Calculate expected total drawdown for each state
-% cumTgw = zeros(gw_M, N);
-% T_gw_temp = T_gw_all;
-% indexNan = isnan(T_gw_temp);
-% T_gw_temp(indexNan) = 0;
-% for t = linspace(N,1,N)
-%     for index_s1 = 1:gw_M
-%         s1 = s_gw(index_s1);
-%         if t == N 
-%             cumTgw(index_s1,t) = T_gw_temp(1,index_s1,t);
-%         else
-%             cumTgw(index_s1,t) = sum(T_gw_temp(:,index_s1,t) .* cumTgw(:,t+1));
-%         end
-%     end
-% end
+%% Runoff time series for each T,P state
+
+% Generate T and P timeseries based on T and P mean states
+T_ts = cell(M_T,N);
+P_ts = cell(M_P,N);
+for t = 1:N
+    for i = 1:M_T  % conveniently, there are the same number of states for T and P right now
+        [T_ts{i,t}, P_ts{i,t}] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(i), s_T_abs(i), climParam.numSampTS);
+    end
+end
+
+% Generate runoff timeseries - different set for each T,P combination
+runoff = cell(M_T, M_P, N);
+
+for t = 1:N
+    
+    % loop over available temp states
+    index_s_t_thisPeriod = index_s_t_time{t}; 
+    for index_s_t = index_s_t_thisPeriod
+        st = s_T(index_s_t);
+        
+        % loop over available precip states
+        index_s_p_thisPeriod = index_s_p_time{t}; 
+        for index_s_p = index_s_p_thisPeriod
+            sp = s_P(index_s_p); 
+            
+            runoff{index_s_t, index_s_p, t} = ...
+                TP2runoff(T_ts{index_s_t,t}, P_ts{index_s_p,t}, runParam.steplen);
+
+        end
+    end
+end
+
 
 
 %% Backwards Recursion
@@ -137,7 +173,7 @@ for t = linspace(N,1,N)
                 for index_a = 1:num_a_exp
                     a = a_exp(index_a);
 
-                    
+                    % Generate 
                     
                     
                     
@@ -261,5 +297,5 @@ end
 
 
 
-end
+
 

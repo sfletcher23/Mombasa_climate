@@ -48,14 +48,14 @@ end
 %% Time series from deltas
 
 % Simulate delta time seriess
-p = rand(climParam.numSampTS,N+1);
-state_ind_P = zeros(climParam.numSampTS,N);
-state_ind_T = zeros(climParam.numSampTS,N+1);
+p = rand(climParam.numSamp_delta2abs,N+1);
+state_ind_P = zeros(climParam.numSamp_delta2abs,N);
+state_ind_T = zeros(climParam.numSamp_delta2abs,N+1);
 state_ind_P(:,1) = find(climParam.P0==s_P);
-T0_ind = randi(M_T,climParam.numSampTS,1);
+T0_ind = randi(M_T,climParam.numSamp_delta2abs,1);
 
 state_ind_T(:,1) = T0_ind;
-for i = 1:climParam.numSampTS
+for i = 1:climParam.numSamp_delta2abs
     for t = 1:N
         state_ind_T(i,t+1) = find(p(i,t) < cumsum(T_Temp_delta(:,state_ind_T(i,t),t)),1);
         state_ind_P(i,t+1) = find(p(i,t) < cumsum(T_Precip_delta(:,state_ind_P(i,t),t)),1);
@@ -68,8 +68,8 @@ P_delta_over_time = s_P(state_ind_P);
 T_over_time = cumsum( T_delta_over_time,2) + climParam.T0_abs;
 
 % Precip is percent change
-P_over_time = zeros(climParam.numSampTS, N+1);
-for i = 1:climParam.numSampTS
+P_over_time = zeros(climParam.numSamp_delta2abs, N+1);
+for i = 1:climParam.numSamp_delta2abs
     for t = 1:6
         if t == 1 
             P_over_time(i,t) = climParam.P0_abs;
