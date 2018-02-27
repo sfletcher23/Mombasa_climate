@@ -12,7 +12,14 @@ function [runoff] = TP2runoff(T_ts, P_ts, steplen)
 
 % Load CLIRUN calibration results
 calibrationFile = '29_Jan_2018_17_10_19_maybe_winner_3.mat';
-load(strcat('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
+
+if ~isempty(getenv('SLURM_JOB_ID'))
+    load(strcat('/net/fs02/d2/sfletch/Mombasa_climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
+else
+    load(strcat('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
+end
+
+
 
 
 numMonths = steplen*12;
