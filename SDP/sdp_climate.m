@@ -112,6 +112,8 @@ for t = 1:N
     end
 end
 
+save('runoff_by_state', 'runoff')
+
 end
 
 %% Backwards Recursion
