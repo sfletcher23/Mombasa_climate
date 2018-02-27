@@ -20,17 +20,11 @@ else
 end
 
 
-% Set up parallel 
-pc = parcluster('local');
-if ~isempty(getenv('SLURM_JOB_ID'))
-    parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
-end
-
 numMonths = steplen*12;
 [numSamples,~] = size(T_ts); 
 
 streamflow_mmpd = zeros(numSamples,numMonths);
-parfor i = 1:numSamples
+for i = 1:numSamples
     watyear = 1;
      streamflow_mmpd(i,:) = Simulator(X_results, T_ts(i,:), P_ts(i,:), watyear); % mm/d
 end

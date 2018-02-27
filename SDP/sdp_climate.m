@@ -105,11 +105,18 @@ end
 % Generate runoff timeseries - different set for each T,P combination
 runoff = cell(M_T, M_P, N);
 
+
+% Set up parallel 
+pc = parcluster('local');
+if ~isempty(getenv('SLURM_JOB_ID'))
+    parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
+end
+
 for t = 1:N
     
     % loop over available temp states
     index_s_t_thisPeriod = index_s_t_time{t}; 
-    for index_s_t = index_s_t_thisPeriod
+    parfor index_s_t = index_s_t_thisPeriod
         st = s_T(index_s_t);
         
         % loop over available precip states
