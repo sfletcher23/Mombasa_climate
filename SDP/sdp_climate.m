@@ -1,4 +1,5 @@
 
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate'))
 
 %% Parameters
 
