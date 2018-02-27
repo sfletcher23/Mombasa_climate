@@ -30,3 +30,5 @@ for t = 1:N
         end
     end
 end
+
+save('runoff_by_state', 'runoff')
