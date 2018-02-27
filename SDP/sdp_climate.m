@@ -1,5 +1,11 @@
 
-addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate'))
+% Add subfolders to path
+if ~isempty(getenv('SLURM_JOB_ID'))
+    addpath(genpath('/net/fs02/d2/sfletch/Mombasa_climate'))
+else
+    addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate'))
+end
+
 
 %% Parameters
 
