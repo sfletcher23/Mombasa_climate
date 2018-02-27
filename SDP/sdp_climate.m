@@ -16,6 +16,8 @@ climParam.checkBins = false;
 
 %% State and Action Definitions 
 
+N = runParam.N;
+
 % Generate state space for climate variables
 climParam.P_min = -.3;
 climParam.P_max = .3;
@@ -60,7 +62,6 @@ a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - bui
   
 %% Calculate climate transition matrix 
 
-N = runParam.N;
 
 % Calculate T_clim
 
