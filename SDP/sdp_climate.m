@@ -6,6 +6,11 @@ else
     addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate'))
 end
 
+jobid = getenv('SLURM_JOB_ID');
+datetime=datestr(now);
+datetime=strrep(datetime,':','_'); %Replace colon with underscore
+datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
+datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 %% Parameters
 
@@ -13,7 +18,9 @@ runParam = struct;
 runParam.N = 5;
 runParam.runSDP = false;
 runParam.steplen = 20; 
-runParam.runRunoff = true;
+runParam.runRunoff = false;
+runParam.runTPts = true;
+runParam.runoffPostProcess = true;
 runParam.calcTmat = false;
 
 climParam = struct;
@@ -91,7 +98,7 @@ end
 
 %% Runoff time series for each T,P state
 
-if runParam.runRunoff 
+if runParam.runTPts
 
 % Generate T and P timeseries based on T and P mean states
 T_ts = cell(M_T_abs,N);
@@ -106,6 +113,10 @@ for t = 1:N
     end
 end
 
+end
+
+if runParam.runRunoff 
+    
 % Generate runoff timeseries - different set for each T,P combination
 runoff = cell(M_T_abs, M_P_abs, N);
 
@@ -139,14 +150,35 @@ for t = 1:N
     end
 end
 
-jobid = getenv('SLURM_JOB_ID');
-datetime=datestr(now);
-datetime=strrep(datetime,':','_'); %Replace colon with underscore
-datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
-datetime=strrep(datetime,' ','_');%Replace space with underscore
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
 save(savename_runoff, 'runoff')
 
+end
+
+
+if runParam.runoffPostProcess
+    % The nature of the parfor loop above saves the runoff timeseries in
+    % the wrong temp index; this section corrects that
+    runoff_post = cell(M_T_abs, M_P_abs, N);
+    for t = 1:N
+        
+        index_s_p_thisPeriod = index_s_p_time{t}; 
+        for index_s_p = index_s_p_thisPeriod
+            
+            index_s_t_thisPeriod = index_s_t_time{t}; 
+            for i= 1:length(index_s_t_thisPeriod)
+                
+                runoff_post{index_s_t_thisPeriod(i),index_s_p,t} = runoff{i,index_s_p,t};
+           
+            end
+        end
+    end
+    
+    runoff = runoff_post;
+    
+    savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
+    save(savename_runoff, 'runoff')
+    
 end
 
 %% Backwards Recursion
