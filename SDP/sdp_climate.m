@@ -22,11 +22,15 @@ runParam.runRunoff = false;
 runParam.runTPts = true;
 runParam.runoffPostProcess = true;
 runParam.calcTmat = false;
+runParam.runoffLoadName = 'runoff_by_state__28_Feb_2018_11_22_18.mat';
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
 climParam.numSampTS = 1;
 climParam.checkBins = false;
+
+costParam = struct;
+costParam.yieldprctl = 50;
 
 
 %% State and Action Definitions 
@@ -153,8 +157,6 @@ end
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
 save(savename_runoff, 'runoff')
 
-end
-
 
 if runParam.runoffPostProcess
     % The nature of the parfor loop above saves the runoff timeseries in
@@ -180,6 +182,49 @@ if runParam.runoffPostProcess
     save(savename_runoff, 'runoff')
     
 end
+
+else
+    
+load(runParam.runoffLoadName);
+
+end
+
+%% Use reservoir operation model to calculate yield and shortage
+
+storage = 100;
+
+index_s_t = 55;
+index_s_p = 7;
+t = 3;
+
+[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage, runParam, climParam);
+[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = inflow2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage);
+% [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = runoff2yield(inflow, T, P, storage, runParam, climParam);
+
+if false
+% figure; subplot(2,1,1); plot(T_ts{index_s_t,t}); subplot(2,1,2); plot(P_ts{index_s_p,t}) 
+figure; 
+subplot(2,1,2)
+bar([yield_mdl; unmet_dom_mdl; unmet_ag_mdl]', 'stacked');
+hold on
+plot(dmd, 'LineWidth', 1.5)
+xlim([0 length(runoff{index_s_t,index_s_p,t})])
+legend('Yield', 'Unmet domestic', 'Unmet ag', 'Demand')
+subplot(2,1,1)
+hold on
+plot(K+20, 'LineWidth', 1.5)
+plot(runoff{index_s_t,index_s_p,t}, 'LineWidth', 1.5)
+legend('storage', 'inflow')
+title('simulated inflow')
+xlim([0 length(runoff{index_s_t,index_s_p,t})])
+end
+total_unmet = sum(unmet_ag_mdl + unmet_dom_mdl)
+% frc_unmet = total_unmet / sum(dmd)
+
+
+
+
+
 
 %% Backwards Recursion
 
