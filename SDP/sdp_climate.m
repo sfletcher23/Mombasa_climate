@@ -97,8 +97,12 @@ if runParam.runRunoff
 T_ts = cell(M_T_abs,N);
 P_ts = cell(M_P_abs,N);
 for t = 1:N
-    for i = 1:M_T_abs  % conveniently, there are the same number of states for T and P right now
-        [T_ts{i,t}, P_ts{i,t}] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(i), s_T_abs(i), climParam.numSampTS);
+    for i = 1:M_T_abs  
+        [T_ts{i,t}, ~] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(1), s_T_abs(i), climParam.numSampTS);
+    end
+    
+    for i = 1:M_P_abs  
+        [~, P_ts{i,t}] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(i), s_T_abs(1), climParam.numSampTS);
     end
 end
 
@@ -116,7 +120,7 @@ for t = 1:N
     
     % loop over available temp states
     index_s_t_thisPeriod = index_s_t_time{t}; 
-    for i = 1:length(index_s_t_thisPeriod)
+    parfor i = 1:length(index_s_t_thisPeriod)
         index_s_t = index_s_t_thisPeriod(i);
         
         runoff_temp = cell(M_P_abs,1);
