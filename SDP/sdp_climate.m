@@ -116,7 +116,8 @@ for t = 1:N
     
     % loop over available temp states
     index_s_t_thisPeriod = index_s_t_time{t}; 
-    parfor index_s_t = index_s_t_thisPeriod
+    parfor i = 1:length(index_s_t_thisPeriod)
+        index_s_t = index_s_t_thisPeriod(i);
         st = s_T(index_s_t);
         
         runoff_temp = cell(M_P,1);
@@ -131,7 +132,7 @@ for t = 1:N
 
         end
         
-        runoff(index_s_t, :, t) = runoff_temp;
+        runoff(i, :, t) = runoff_temp;
         
     end
 end
