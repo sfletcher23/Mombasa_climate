@@ -18,7 +18,7 @@ runParam.calcTmat = false;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 10000;
-climParam.numSampTS = 1000;
+climParam.numSampTS = 100;
 climParam.checkBins = false;
 
 
