@@ -17,8 +17,8 @@ runParam.runRunoff = true;
 runParam.calcTmat = false;
 
 climParam = struct;
-climParam.numSamp_delta2abs = 10000;
-climParam.numSampTS = 100;
+climParam.numSamp_delta2abs = 1000;
+climParam.numSampTS = 1;
 climParam.checkBins = false;
 
 
@@ -116,16 +116,14 @@ for t = 1:N
     
     % loop over available temp states
     index_s_t_thisPeriod = index_s_t_time{t}; 
-    parfor i = 1:length(index_s_t_thisPeriod)
+    for i = 1:length(index_s_t_thisPeriod)
         index_s_t = index_s_t_thisPeriod(i);
-        st = s_T(index_s_t);
         
         runoff_temp = cell(M_P,1);
         
         % loop over available precip states
         index_s_p_thisPeriod = index_s_p_time{t}; 
         for index_s_p = index_s_p_thisPeriod
-            sp = s_P(index_s_p); 
             
             runoff_temp{index_s_p} = ...
                 TP2runoff(T_ts{index_s_t,t}, P_ts{index_s_p,t}, runParam.steplen);
