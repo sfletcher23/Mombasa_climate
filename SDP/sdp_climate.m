@@ -119,15 +119,20 @@ for t = 1:N
     parfor index_s_t = index_s_t_thisPeriod
         st = s_T(index_s_t);
         
+        runoff_temp = cell(M_P,1);
+        
         % loop over available precip states
         index_s_p_thisPeriod = index_s_p_time{t}; 
         for index_s_p = index_s_p_thisPeriod
             sp = s_P(index_s_p); 
             
-            runoff{index_s_t, index_s_p, t} = ...
+            runoff_temp{index_s_p} = ...
                 TP2runoff(T_ts{index_s_t,t}, P_ts{index_s_p,t}, runParam.steplen);
 
         end
+        
+        runoff(index_s_t, :, t) = runoff_temp;
+        
     end
 end
 
