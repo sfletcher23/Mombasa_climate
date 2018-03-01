@@ -16,13 +16,16 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = false;
+runParam.runSDP = true;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
-runParam.runTPts = true;
-runParam.runoffPostProcess = true;
+runParam.runTPts = false;
+runParam.runoffPostProcess = false;
 runParam.calcTmat = false;
-runParam.runoffLoadName = 'runoff_by_state__28_Feb_2018_11_22_18.mat';
+runParam.calcShortage = false;
+runParam.runoffLoadName = 'runoff_by_state_comb_Mar1';
+runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
+runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
@@ -30,7 +33,9 @@ climParam.numSampTS = 1;
 climParam.checkBins = false;
 
 costParam = struct;
-costParam.yieldprctl = 50;
+costParam.yieldprctl = 80;
+costParam.domShortage = 25;
+costParam.agShortage = 10;
 
 
 %% State and Action Definitions 
@@ -72,11 +77,13 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
+storage = [80 120];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
             % 4 - expand flex dam
+dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.08];
 
   
 %% Calculate climate transition matrix 
@@ -189,77 +196,75 @@ load(runParam.runoffLoadName);
 
 end
 
-%% Use reservoir operation model to calculate yield and shortage
+%% Use reservoir operation model to calculate yield and shortage costs
 
-storage = 100;
+if runParam.calcShortage
 
-index_s_t = 55;
-index_s_p = 7;
-t = 3;
+    unmet_ag = zeros(M_T_abs, M_P_abs, length(storage), N);
+    unmet_dom = zeros(M_T_abs, M_P_abs, length(storage), N);
 
-[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage, runParam, climParam);
-[yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = inflow2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage);
-% [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = runoff2yield(inflow, T, P, storage, runParam, climParam);
+    for t = 1:N
+        index_s_p_thisPeriod = index_s_p_time{t}; 
+        for index_s_p = index_s_p_thisPeriod
 
-if false
-% figure; subplot(2,1,1); plot(T_ts{index_s_t,t}); subplot(2,1,2); plot(P_ts{index_s_p,t}) 
-figure; 
-subplot(2,1,2)
-bar([yield_mdl; unmet_dom_mdl; unmet_ag_mdl]', 'stacked');
-hold on
-plot(dmd, 'LineWidth', 1.5)
-xlim([0 length(runoff{index_s_t,index_s_p,t})])
-legend('Yield', 'Unmet domestic', 'Unmet ag', 'Demand')
-subplot(2,1,1)
-hold on
-plot(K+20, 'LineWidth', 1.5)
-plot(runoff{index_s_t,index_s_p,t}, 'LineWidth', 1.5)
-legend('storage', 'inflow')
-title('simulated inflow')
-xlim([0 length(runoff{index_s_t,index_s_p,t})])
+            index_s_t_thisPeriod = index_s_t_time{t}; 
+            for index_s_t= index_s_t_thisPeriod
+
+                for s = 1:length(storage)
+
+                    [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
+                        runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
+                    unmet_ag(index_s_t, index_s_p, s, t) = prctile(sum(unmet_ag_mdl,2),costParam.yieldprctl);
+                    unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_mdl,2),costParam.yieldprctl);
+                end
+            end
+        end
+    end
+
+
+    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
+
+    savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
+    save(savename_shortageCost, 'shortageCost')
+
+else
+    load(runParam.shortageLoadName);
 end
-total_unmet = sum(unmet_ag_mdl + unmet_dom_mdl)
-% frc_unmet = total_unmet / sum(dmd)
-
-
-
-
-
-
+    
 %% Backwards Recursion
 
 if runParam.runSDP
 
 % Initialize best value and best action matrices
 % Temperature states x precipitaiton states x capacity states, time
-V = NaN(M_T, M_P, M_C, N+1);
-X = NaN(M_T, M_P, M_C, N+1);
+V = NaN(M_T_abs, M_P_abs, M_C, N+1);
+X = NaN(M_T_abs, M_P_abs, M_C, N+1);
 
 % Terminal period
-X(:,:,:,N+1) = zeros(M_T, M_P, M_C, 1);
-V(:,:,:,N+1) = zeros(M_T, M_P, M_C, 1);
+X(:,:,:,N+1) = zeros(M_T_abs, M_P_abs, M_C, 1);
+V(:,:,:,N+1) = zeros(M_T_abs, M_P_abs, M_C, 1);
 
 % Loop over all time periods
 for t = linspace(N,1,N)
     
     % Calculate nextV    
-    nextV = V(:,:,t+1);
+    nextV = V(:,:,:,t+1);
           
     % Loop over all states
     
     % Loop over temperature state
     index_s_t_thisPeriod = index_s_t_time{t}; 
     for index_s_t = index_s_t_thisPeriod
-        st = s_T(index_s_t);
+        st = s_T_abs(index_s_t);
         
         % Loop over precipitation state
         index_s_p_thisPeriod = index_s_p_time{t}; 
         for index_s_p = index_s_p_thisPeriod
-            sp = s_P(index_s_p);
+            sp = s_P_abs(index_s_p);
        
             % Loop over capacity expansion state
             for index_s_c = 1:M_C
-                sc = s_expand(index_s2);
+                sc = s_C(index_s_c);
 
                 bestV = Inf;  % Best value
                 bestX = 0;  % Best action
@@ -271,7 +276,7 @@ for t = linspace(N,1,N)
                     a_exp = 1:3; % build a small, large, or flex dam
                 else
                     % In later periods decide whether to expand or not if available
-                    switch s2
+                    switch sc
                         case s_C(1) % Small
                             a_exp = [0];
                         case s_C(2) % Large
@@ -288,103 +293,80 @@ for t = linspace(N,1,N)
                 for index_a = 1:num_a_exp
                     a = a_exp(index_a);
 
-                    % Generate 
+                    % Calculate costs 
                     
+                    % Select which capacity is currently available
+                    if sc == 1 || sc == 3
+                        short_ind = 1;    % small capacity
+                    else
+                        short_ind = 2; % large capacity
+                    end
                     
+                    % In first time period, assume have dam built
+                    if t == 1
+                        if a == 3
+                            short_ind = 2; % large capacity
+                        else 
+                             short_ind = 1;    % small capacity
+                        end
+                    end
                     
-                    % Updated to here so far!!!
-                    
-                    
-                    
-                    
-                    
-                    % Calculate demand
-%                     demandThisPeriod = demand(water, population(t), t, gwParam);
-                    demandThisPeriod = gwParam.pumpingRate;
-
-                    % Calculate cost and shortages this period
-                    [ cost, ~,~, ~,~, ~, ~, ~, ~] = cost_supply_func( a1, a, s1, s2, costParam, water, gwParam, t, demandThisPeriod, runParam.capacityDelay, exp_vectors, false);
-
+                    cost = shortageCost(index_s_t, index_s_p, short_ind, t) + dam_cost(index_a);
+                                      
+                   
                     % Calculate transition matrix
                     
-                    % If stop pumping, move to state -1. Otherwise, use
-                    % T_gw calculated above. 
-                    
-                    switch a
-                        case 0
-                            T_gw = zeros(1,gw_M);
-                            T_gw(1) = 1;
-                        case 1
-                            T_gw = T_gw_all(:,index_s1,t)';
+                    % Capacity transmat vector
+                    T_cap = zeros(1,M_C);
+                    if t == 1
+                        % In first time period, get whatever dam you picked
+                        T_cap(sc) = 1;
+                    else
+                        % Otherwise, either stay in current or move to expanded
+                        switch a
+                            case 0
+                                T_cap(sc) = 1;
+                            case 4
+                                T_cap(4) = 1;
+                        end                         
                     end
 
-                    % Get transmat vector for next expansion state
-                    % (deterministic)                  
-                    T_expand = zeros(1,exp_M);
+                    % Temperature transmat vector
+                    T_Temp_row = T_Temp(:,index_s_t, t)';
+                    if sum(isnan(T_Temp_row)) > 0
+                        error('Nan in T_Temp_row')
+                    end
                     
-                    if runParam.capacityDelay
-                        T_exp_online_ind = subindex_s2(1);
-                        T_exp_delay1_ind = subindex_s2(2);
-                        T_exp_delay2_ind = subindex_s2(3);
-                        % Move delayed capacity to online
-                        if subindex_s2(3) == 2  % Move big plant from delay2 to delay 1
-                            T_exp_delay1_ind = 4;
-                            T_exp_delay2_ind = 1;
-                        elseif subindex_s2(2) > 1
-                            T_exp_online_ind = T_exp_online_ind + (subindex_s2(2) - 1);
-                            T_exp_delay1_ind = 1;
-                        end
-                        % Add new capacity to delay
-                        if a == 1
-                            T_exp_delay1_ind = 2;
-                        elseif a == 2
-                            T_exp_delay2_ind = 2;
-                        end
-                        temp_index = vectorIndex([T_exp_online_ind T_exp_delay1_ind T_exp_delay2_ind], {s_exp_on', s_exp_delay1', s_exp_delay2'});
-                        exp_index = find(s_expand == temp_index);
-                        T_expand(exp_index) = 1;
-                    else
-                        if a == 0
-                            T_expand(index_s2) = 1; % Stay in current state
-                        elseif a == 1
-                            T_expand(index_s2 + 1) = 1; % Move up one state
-                        elseif a == 2
-                            T_expand(index_s2 + 3) = 1; % Move up three states
-                        end
+                    % Precipitation transmat vector
+                    T_Precip_row = T_Precip(:,index_s_p, t)';
+                    if sum(isnan(T_Precip_row)) > 0
+                        error('Nan in T_Precip_row')
                     end
                     
                     % Calculate full transition matrix
-                    % T gives probability of next state given
-                    % current state and actions
+                    % T gives probability of next state given current state and actions
 
-                    TRows = cell(2,1);
-                    TRows{1} = T_gw;
-                    TRows{2} = T_expand;
+                    TRows = cell(3,1);
+                    TRows{1} = T_Temp_row;
+                    TRows{2} = T_Precip_row;
+                    TRows{3} = T_cap;
                     [ T ] = transrow2mat( TRows );
 
                      % Calculate expected future cost or percentile cost
                     indexNonZeroT = find(T > 0);
-                    if runParam.percentile
-                        nonZeroV = nextV(indexNonZeroT);
-                        [sortedNextV, indexSort] = sort(reshape(nonZeroV, 1, []));
-                        TnonZero = T(indexNonZeroT);
-                        indexPrcnV = find(cumsum(TnonZero(indexSort)) > runParam.percentile/100, 1);
-                        expV = nonZeroV(indexPrcnV);
-                    else
-                        expV = sum(T(indexNonZeroT) .* nextV(indexNonZeroT));
-                        for i = 2:4
-                            expV = sum(expV);
-                        end
+                    expV = sum(T(indexNonZeroT) .* nextV(indexNonZeroT));
+                    for i = 2:4
+                        expV = sum(expV);
                     end
-                    
-                    stateMsg = strcat('t=', num2str(t), ', s1=', num2str(s1), ', a1=', num2str(a1), ', s2=', num2str(s2), ', a2=', num2str(a))
+
+                    stateMsg = strcat('t=', num2str(t), ', st=', num2str(st), ', sp=', num2str(sp), ', sc=', num2str(sc), ', a=', num2str(a))
                     disp(stateMsg)
+                    
                    % Check if best decision
                     checkV = cost + expV;
                     if checkV < bestV
                         bestV = checkV;
-                        bestX1 = a1;
-                        bestX2 = a;
+                        bestX = a;
                     end
                 end
             end
@@ -397,12 +379,18 @@ for t = linspace(N,1,N)
             end
 
             % Save best value and action for current state
-            V(index_s1, index_s2, t) = bestV;
-            X1(index_s1, index_s2, t) = bestX1;
-            X2(index_s1, index_s2, t) = bestX2;
+            V(index_s_t, index_s_p,index_s_c, t) = bestV;
+            X(index_s_t, index_s_p,index_s_c, t) = bestX;
 
         end
     end
+end
+
+if runParam.saveOn
+    
+    savename_results = strcat('results', jobid,'_', datetime);
+    save(savename_results)
+    
 end
 
 
