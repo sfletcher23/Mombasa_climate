@@ -23,7 +23,7 @@ runParam.runTPts = false;
 runParam.runoffPostProcess = false;
 runParam.calcTmat = false;
 runParam.calcShortage = false;
-runParam.runoffLoadName = 'runoff_by_state_comb_Mar1';
+runParam.runoffLoadName = 'runoff_by_state_comb_Mar2';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
@@ -83,7 +83,7 @@ storage = [80 120];
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
             % 4 - expand flex dam
-dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.08];
+dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.0];
 
   
 %% Calculate climate transition matrix 
