@@ -21,6 +21,7 @@ runParam.steplen = 20;
 runParam.runRunoff = true;
 runParam.runTPts = true;
 runParam.runoffPostProcess = true;
+runParam.forwardSim = false;
 runParam.calcTmat = false;
 runParam.calcShortage = false;
 runParam.runoffLoadName = 'runoff_by_state_comb_Mar2';
@@ -29,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 251;
+climParam.numSampTS = 50;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -116,11 +117,11 @@ T_ts = cell(M_T_abs,N);
 P_ts = cell(M_P_abs,N);
 for t = 1:N
     for i = 1:M_T_abs  
-        [T_ts{i,t}, ~] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(1), s_T_abs(i), climParam.numSampTS);
+        [T_ts{i,t}, ~] = mean2TPtimeseriesMJL(t, runParam.steplen, s_P_abs(1), s_T_abs(i), climParam.numSampTS);
     end
     
     for i = 1:M_P_abs  
-        [~, P_ts{i,t}] = mean2TPtimeseries(t, runParam.steplen, s_P_abs(i), s_T_abs(1), climParam.numSampTS);
+        [~, P_ts{i,t}] = mean2TPtimeseriesMJL(t, runParam.steplen, s_P_abs(i), s_T_abs(1), climParam.numSampTS);
     end
 end
 
@@ -410,7 +411,39 @@ end
 
 end
 
+%% Forward simulation
+
+if runParam.forwardSim
     
+R = 1000;
+N = runParam.N;
+
+T_state = zeros(R,N);
+P_state = zeros(R,N);
+C_state = zeros(R,N);
+action = zeros(R,N);
+damCostTime = zeros(R,N);
+shortageCostTime = zeros(R,N);
+totalCostTime = zeros(R,N); 
+
+T_state(1,:) = climParam.T0_abs;
+P_state(1,:) = climParam.P0_abs;
+C_state(1,:) = 1;
+
+for t = 1:N
+    
+    % Choose best action given current state
+    
+    
+    % Save costs of that action
+    
+    
+    % Simulate transition to next state
+    
+    
+end
+
+end
 
 
 
