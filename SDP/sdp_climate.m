@@ -22,7 +22,7 @@ runParam.runRunoff = true;
 runParam.runTPts = true;
 runParam.runoffPostProcess = true;
 runParam.calcTmat = false;
-runParam.calcShortage = true;
+runParam.calcShortage = false;
 runParam.runoffLoadName = 'runoff_by_state_comb_Mar2';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -33,7 +33,7 @@ climParam.numSampTS = 251;
 climParam.checkBins = false;
 
 costParam = struct;
-costParam.yieldprctl = 80;
+costParam.yieldprctl = 50;
 costParam.domShortage = 25;
 costParam.agShortage = 10;
 
@@ -77,13 +77,13 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [80 120];
+storage = [100 140];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
             % 4 - expand flex dam
-dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.0];
+dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.3];
 
   
 %% Calculate climate transition matrix 
@@ -232,6 +232,7 @@ if runParam.calcShortage
 else
     load(runParam.shortageLoadName);
 end
+
     
 %% Backwards Recursion
 
@@ -294,6 +295,9 @@ for t = linspace(N,1,N)
                 % Loop over expansion action
                 for index_a = 1:num_a_exp
                     a = a_exp_thisPeriod(index_a);
+                    
+                    stateMsg = strcat('t=', num2str(t), ', st=', num2str(st), ', sp=', num2str(sp), ', sc=', num2str(sc), ', a=', num2str(a));
+                    disp(stateMsg)
 
                     % Calculate costs 
                     
@@ -321,7 +325,7 @@ for t = linspace(N,1,N)
                     sCost = shortageCost(index_s_t, index_s_p, short_ind, t)
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
-                    cost = sCost + dCost;
+                    cost = sCost + dCost
                                       
                    
                     % Calculate transition matrix
@@ -368,21 +372,20 @@ for t = linspace(N,1,N)
                     for i = 2:4
                         expV = sum(expV);
                     end
-
-                    stateMsg = strcat('t=', num2str(t), ', st=', num2str(st), ', sp=', num2str(sp), ', sc=', num2str(sc), ', a=', num2str(a));
-                    disp(stateMsg)
                     
                    % Check if best decision
-                    checkV = cost + expV;
+                    checkV = cost + expV
                     if checkV < bestV
                         bestV = checkV;
                         bestX = a;
                     end
+                    
+                     % Debug
+                    if sc == 3
+                        sc
+                    end
                 end
-            end
             
-
-
             % Check that bestV is not Inf
             if bestV == Inf
                 error('BestV is Inf, did not pick an action')
@@ -391,7 +394,8 @@ for t = linspace(N,1,N)
             % Save best value and action for current state
             V(index_s_t, index_s_p,index_s_c, t) = bestV;
             X(index_s_t, index_s_p,index_s_c, t) = bestX;
-
+            
+            end
         end
     end
 end
