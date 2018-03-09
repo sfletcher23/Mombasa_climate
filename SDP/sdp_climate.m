@@ -30,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 50;
+climParam.numSampTS = 1;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -124,6 +124,9 @@ for t = 1:N
         [~, P_ts{i,t}] = mean2TPtimeseriesMJL(t, runParam.steplen, s_P_abs(i), s_T_abs(1), climParam.numSampTS);
     end
 end
+
+savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
+save(savename_runoff, 'T_ts', 'P_ts')
 
 end
 
