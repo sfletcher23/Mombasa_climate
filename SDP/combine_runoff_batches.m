@@ -1,3 +1,4 @@
+%% Combine runoff
 
 filenames = {'runoff_by_state_63724_01_Mar_2018_12_00_34', 'runoff_by_state_63681_28_Feb_2018_09_06_37', ...
     'runoff_by_state_63728_01_Mar_2018_12_01_33', 'runoff_by_state_63725_01_Mar_2018_14_03_01',...
@@ -26,3 +27,5 @@ for k = 1:length(filenames)
     
 end
 runoff = runoff_post;
+
+

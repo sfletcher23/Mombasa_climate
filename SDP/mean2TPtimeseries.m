@@ -6,10 +6,14 @@ function [T_ts, P_ts] = mean2TPtimeseries(timestep, steplen, sp, st, numsamp)
 % Inputs:
 % timestep: refers to the time step of the SDP eg the 2nd two-decade period
 % steplen: the length of the time step in years eg 20
-% index_s_p: the index of the precipitation state, which corresponds to the third dimension of NUP
-% index_s_t: the index of the temperature state, which corresponds to the third dimension of NUT
-% NUT: BMA mean temp samples (samples x timesteps x numstates)
-% NUP: BMA mean precip samples (samples x timesteps x numstates)
+% numsamp: number of time series samples to generate
+% sp: mean precipitation value / state of SDP
+% st: mean temperature value / state of SDP
+
+% Outputs:
+% T_ts: monthly temp time series (numsamp x timestep*12)
+% P_ts: monthly precip time series (numsamp x timestep*12)
+
 
 % Create index for appropriate dates in Tij and Pij
 startdate = (1990-1900)*12 + 1; % First period starts in 1990

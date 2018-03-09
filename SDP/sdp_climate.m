@@ -16,20 +16,20 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = true;
+runParam.runSDP = false;
 runParam.steplen = 20; 
-runParam.runRunoff = false;
-runParam.runTPts = false;
-runParam.runoffPostProcess = false;
+runParam.runRunoff = true;
+runParam.runTPts = true;
+runParam.runoffPostProcess = true;
 runParam.calcTmat = false;
-runParam.calcShortage = false;
+runParam.calcShortage = true;
 runParam.runoffLoadName = 'runoff_by_state_comb_Mar2';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 1;
+climParam.numSampTS = 251;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -162,7 +162,7 @@ for t = 1:N
 end
 
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
-save(savename_runoff, 'runoff')
+save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
 
 
 if runParam.runoffPostProcess
@@ -186,7 +186,7 @@ if runParam.runoffPostProcess
     runoff = runoff_post;
     
     savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
-    save(savename_runoff, 'runoff')
+    save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
     
 end
 
@@ -202,6 +202,7 @@ if runParam.calcShortage
 
     unmet_ag = zeros(M_T_abs, M_P_abs, length(storage), N);
     unmet_dom = zeros(M_T_abs, M_P_abs, length(storage), N);
+    yield = zeros(M_T_abs, M_P_abs, length(storage), N);
 
     for t = 1:N
         index_s_p_thisPeriod = index_s_p_time{t}; 
@@ -216,6 +217,7 @@ if runParam.calcShortage
                         runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
                     unmet_ag(index_s_t, index_s_p, s, t) = prctile(sum(unmet_ag_mdl,2),costParam.yieldprctl);
                     unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_mdl,2),costParam.yieldprctl);
+                    yield(index_s_t, index_s_p, s, t) = prctile(sum(yield_mdl,2),costParam.yieldprctl);
                 end
             end
         end
@@ -225,7 +227,7 @@ if runParam.calcShortage
     shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
-    save(savename_shortageCost, 'shortageCost')
+    save(savename_shortageCost, 'shortageCost', 'yield')
 
 else
     load(runParam.shortageLoadName);
@@ -273,25 +275,25 @@ for t = linspace(N,1,N)
                 
                 % In first period decide what dam to build
                 if t == 1
-                    a_exp = 1:3; % build a small, large, or flex dam
+                    a_exp_thisPeriod = 1:3; % build a small, large, or flex dam
                 else
                     % In later periods decide whether to expand or not if available
                     switch sc
                         case s_C(1) % Small
-                            a_exp = [0];
+                            a_exp_thisPeriod = [0];
                         case s_C(2) % Large
-                            a_exp = [0];
+                            a_exp_thisPeriod = [0];
                         case s_C(3) % Flex, not expanded
-                            a_exp = [0 4];
+                            a_exp_thisPeriod = [0 4];
                         case s_C(4) % Flex, expanded
-                            a_exp = [0];
+                            a_exp_thisPeriod = [0];
                     end
                 end
-                num_a_exp = length(a_exp);
+                num_a_exp = length(a_exp_thisPeriod);
 
                 % Loop over expansion action
                 for index_a = 1:num_a_exp
-                    a = a_exp(index_a);
+                    a = a_exp_thisPeriod(index_a);
 
                     % Calculate costs 
                     
@@ -311,7 +313,15 @@ for t = linspace(N,1,N)
                         end
                     end
                     
-                    cost = shortageCost(index_s_t, index_s_p, short_ind, t) + dam_cost(index_a);
+                    % Assume new expansion capacity comes online this period
+                    if a == 4
+                        short_ind = 2; % large capacity
+                    end
+                    
+                    sCost = shortageCost(index_s_t, index_s_p, short_ind, t)
+                    ind_dam = find(a == a_exp);
+                    dCost = dam_cost(ind_dam)
+                    cost = sCost + dCost;
                                       
                    
                     % Calculate transition matrix
@@ -359,7 +369,7 @@ for t = linspace(N,1,N)
                         expV = sum(expV);
                     end
 
-                    stateMsg = strcat('t=', num2str(t), ', st=', num2str(st), ', sp=', num2str(sp), ', sc=', num2str(sc), ', a=', num2str(a))
+                    stateMsg = strcat('t=', num2str(t), ', st=', num2str(st), ', sp=', num2str(sp), ', sc=', num2str(sc), ', a=', num2str(a));
                     disp(stateMsg)
                     
                    % Check if best decision

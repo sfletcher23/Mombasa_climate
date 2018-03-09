@@ -6,6 +6,9 @@ function  [yield, K, demand, unmet_dom, unmet_ag]  = runoff2yield(inflow, T, P, 
 numYears = runParam.steplen;
 numRuns = climParam.numSampTS;
 
+% check numRuns correct
+
+
 dmd_dom = cmpd2mcmpy(150000) * ones(numRuns,12*numYears);
 dmd_ag = repmat([2.5 1.5 0.8 2.0 1.9 2.9 3.6 0.6 0.5 0.3 0.2 3.1], numRuns,numYears);
 demand = dmd_dom + dmd_ag;
