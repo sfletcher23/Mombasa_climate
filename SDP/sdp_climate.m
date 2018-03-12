@@ -30,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 1;
+climParam.numSampTS = 3;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -231,7 +231,7 @@ if runParam.calcShortage
     shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
-    save(savename_shortageCost, 'shortageCost', 'yield')
+    save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
 
 else
     load(runParam.shortageLoadName);
