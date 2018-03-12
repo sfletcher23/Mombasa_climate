@@ -30,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 3;
+climParam.numSampTS = 25;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -234,7 +234,7 @@ if runParam.calcShortage
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
 
 else
-    load(runParam.shortageLoadName);
+%     load(runParam.shortageLoadName);
 end
 
     
@@ -418,7 +418,7 @@ end
 
 if runParam.forwardSim
     
-R = 1000;
+R = 10;
 N = runParam.N;
 
 T_state = zeros(R,N);
@@ -429,21 +429,58 @@ damCostTime = zeros(R,N);
 shortageCostTime = zeros(R,N);
 totalCostTime = zeros(R,N); 
 
-T_state(1,:) = climParam.T0_abs;
-P_state(1,:) = climParam.P0_abs;
-C_state(1,:) = 1;
+T_state(:,1) = climParam.T0_abs;
+P_state(:,1) = climParam.P0_abs;
+C_state(:,1) = 1;
 
-for t = 1:N
-    
-    % Choose best action given current state
-    
-    
-    % Save costs of that action
-    
-    
-    % Simulate transition to next state
-    
-    
+for i = 1:R
+    for t = 1:N
+
+        % Choose best action given current state
+        index_t = find(T_state(i,t) == s_T_abs);
+        index_p = find(P_state(i,t) == s_P_abs);
+        index_c = find(C_state(i,t) == s_C);
+        action(i,t) = X(index_t, index_p, index_c, t);
+
+        % Save costs of that action
+        
+        % Get current capacity and action
+        sc = C_state(i,t);
+        a = action(i,t);
+        
+        % Select which capacity is currently available
+        if sc == 1 || sc == 3
+            short_ind = 1;    % small capacity
+        else
+            short_ind = 2; % large capacity
+        end
+
+        % In first time period, assume have dam built
+        if t == 1
+            if a == 3
+                short_ind = 2; % large capacity
+            else 
+                 short_ind = 1;    % small capacity
+            end
+        end
+
+        % Assume new expansion capacity comes online this period
+        if a == 4
+            short_ind = 2; % large capacity
+        end
+        
+        % Get shortage and dam costs
+        shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t)
+        ind_dam = find(a == a_exp);
+        dCost = dam_cost(ind_dam)
+        cost = sCost + dCost
+
+
+        % Simulate transition to next state
+
+
+    end
+
 end
 
 end
