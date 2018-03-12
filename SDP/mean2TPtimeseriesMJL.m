@@ -1,4 +1,4 @@
-function [T_ts, P_ts] = mean2TPtimeseries(timestep, steplen, sp, st, numsamp)
+function [T_ts, P_ts] = mean2TPtimeseriesMJL(timestep, steplen, sp, st, numsamp)
 % updated March 9 by MJL. Using k-NN boostrapping method
 % Create timeseries of temperature and precipitation for a certain meam T
 % and P states. 
@@ -119,6 +119,10 @@ P_ts = P_tsp.*Pstd_month(:,model_rand)' + Pmean_month(:,model_rand)'+Pmean*ones(
 
 % To avoid having negative precip, set all negative values equal to zero
 P_ts(P_ts<0)=0;
+
+% Convert to double
+T_ts = double(T_ts);
+P_ts = double(P_ts);
 
 if false
     figure;
