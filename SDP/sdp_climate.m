@@ -18,13 +18,13 @@ runParam = struct;
 runParam.N = 5;
 runParam.runSDP = false;
 runParam.steplen = 20; 
-runParam.runRunoff = true;
-runParam.runTPts = true;
-runParam.runoffPostProcess = true;
+runParam.runRunoff = false;
+runParam.runTPts = false;
+runParam.runoffPostProcess = false;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
-runParam.calcShortage = false;
-runParam.runoffLoadName = 'runoff_by_state_comb_Mar2';
+runParam.calcShortage = true;
+runParam.runoffLoadName = 'runoff_by_state_comb_March12_knn';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
@@ -35,8 +35,8 @@ climParam.checkBins = false;
 
 costParam = struct;
 costParam.yieldprctl = 50;
-costParam.domShortage = 25;
-costParam.agShortage = 10;
+costParam.domShortage = 10;
+costParam.agShortage = 5;
 
 
 %% State and Action Definitions 
@@ -78,13 +78,13 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [100 140];
+storage = [60 80];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
             % 4 - expand flex dam
-dam_cost = [0 74436346 100192737 74436346*1.08 74436346*.3];
+dam_cost = [0 74436346 100192737 74436346*1.1 74436346*.4];
 
   
 %% Calculate climate transition matrix 
@@ -196,7 +196,7 @@ end
 
 else
     
-load(runParam.runoffLoadName);
+% load(runParam.runoffLoadName);
 
 end
 
@@ -245,10 +245,9 @@ if runParam.runSDP
 % Initialize best value and best action matrices
 % Temperature states x precipitaiton states x capacity states, time
 V = NaN(M_T_abs, M_P_abs, M_C, N+1);
-X = NaN(M_T_abs, M_P_abs, M_C, N+1);
+X = NaN(M_T_abs, M_P_abs, M_C, N);
 
 % Terminal period
-X(:,:,:,N+1) = zeros(M_T_abs, M_P_abs, M_C, 1);
 V(:,:,:,N+1) = zeros(M_T_abs, M_P_abs, M_C, 1);
 
 % Loop over all time periods
@@ -338,7 +337,7 @@ for t = linspace(N,1,N)
                     T_cap = zeros(1,M_C);
                     if t == 1
                         % In first time period, get whatever dam you picked
-                        T_cap(sc) = 1;
+                        T_cap(a) = 1;
                     else
                         % Otherwise, either stay in current or move to expanded
                         switch a
@@ -470,14 +469,66 @@ for i = 1:R
         end
         
         % Get shortage and dam costs
-        shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t)
+        shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t);
         ind_dam = find(a == a_exp);
-        dCost = dam_cost(ind_dam)
-        cost = sCost + dCost
+        damCostTime(i,t) = dam_cost(ind_dam);
+        totalCostTime(i,t) = sCost + dCost;
 
 
         % Simulate transition to next state
+        % Capacity transmat vector
+        T_cap = zeros(1,M_C);
+        if t == 1
+            % In first time period, get whatever dam you picked
+            T_cap(a) = 1;
+        else
+            % Otherwise, either stay in current or move to expanded
+            switch a
+                case 0
+                    T_cap(sc) = 1;
+                case 4
+                    T_cap(4) = 1;
+            end                         
+        end
 
+        % Temperature transmat vector
+        T_Temp_row = T_Temp(:,index_t, t)';
+        if sum(isnan(T_Temp_row)) > 0
+            error('Nan in T_Temp_row')
+        end
+
+        % Precipitation transmat vector
+        T_Precip_row = T_Precip(:,index_p, t)';
+        if sum(isnan(T_Precip_row)) > 0
+            error('Nan in T_Precip_row')
+        end
+        % Combine trans vectors into matrix
+     	TRows = cell(3,1);
+        TRows{1} = T_Temp_row;
+        TRows{2} = T_Precip_row;
+        TRows{3} = T_cap;
+        [ T_current ] = transrow2mat( TRows );
+        
+        % Simulate next state
+        if t < N
+            T_current_1D = reshape(T_current,[1 numel(T_current)]);
+            T_current_1D_cumsum = cumsum(T_current_1D);
+            p = rand();
+            index = find(p < T_current_1D_cumsum,1);
+            [ind_s1, ind_s2, ind_s3] = ind2sub(size(T_current),index);
+                % Test sample
+                margin = 1e-10;
+                if (T_current(ind_s1, ind_s2, ind_s3) < margin)
+                    error('Invalid sample from T_current')
+                end
+
+            T_state(i,t+1) = s_T_abs(ind_s1);
+            P_state(i,t+1) = s_P_abs(ind_s2);
+            C_state(i,t+1) = s_C(ind_s3);
+
+        end
+        
+        
 
     end
 

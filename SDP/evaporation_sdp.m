@@ -1,6 +1,6 @@
 function  [E]  = evaporation_sdp(storage, T, P, climParam, runParam )
 
-numRuns = climParam.numSampTS;
+[numRuns,~] = size(T);
 numYears = runParam.steplen;
 
 LAT = -3.96;  

@@ -10,7 +10,7 @@ avgStd = cellfun(@(x) mean(std(x,0,2)), runoff);
 % Boxplots by P
 avgMarNow = avgMAR(:,1:28,5);
 avgStdNow = avgStd(:,1:28,5);
-avgShortNow = shortageCost(:,1:28,1,5);
+% avgShortNow = shortageCost(:,1:28,1,5);
 figure;
 subplot(3,1,1)
 boxplot(avgMarNow, 'Labels',cellstr(string(s_P_abs(1:28))))
@@ -22,17 +22,17 @@ boxplot(avgStdNow ./ avgMarNow, 'Labels',cellstr(string(s_P_abs(1:28))))
 title('Distribution of Average Coefficient of Variation by mean P')
 xlabel('Mean P [mm/m]')
 ylabel('Mean Std of Runoff [MCM/y]')
-subplot(3,1,3)
-boxplot(avgShortNow/1E6, 'Labels',cellstr(string(s_P_abs(1:28))))
-title('Distribution of Shortage Cost by mean P')
-xlabel('Mean P [mm/m]')
-ylabel('Shortage Cost M$')
-suptitle('Time Step 5: 2070-2090')
+% subplot(3,1,3)
+% boxplot(avgShortNow/1E6, 'Labels',cellstr(string(s_P_abs(1:28))))
+% title('Distribution of Shortage Cost by mean P')
+% xlabel('Mean P [mm/m]')
+% ylabel('Shortage Cost M$')
+% suptitle('Time Step 5: 2070-2090')
 
 % Boxplots by T
 avgMarNow = avgMAR(44:44+51,:,5)';
 avgStdNow = avgStd(44:44+51,:,5)';
-avgShortNow = shortageCost(44:44+51,:,1,5)';
+% avgShortNow = shortageCost(44:44+51,:,1,5)';
 figure;
 subplot(3,1,1)
 boxplot(avgMarNow, 'Labels',cellstr(string(s_T_abs(44:44+51))))
@@ -44,12 +44,12 @@ boxplot(avgStdNow ./ avgMarNow, 'Labels',cellstr(string(s_T_abs(44:44+51))))
 title('Distribution of Average Coefficient of Variation by mean T')
 xlabel('Mean T [degrees C]')
 ylabel('Mean Std of Runoff [MCM/y]')
-subplot(3,1,3)
-boxplot(avgShortNow/1E6, 'Labels',cellstr(string(s_T_abs(44:44+51))))
-title('Distribution of Shortage Cost by mean T')
-xlabel('Mean T [degrees C]')
-ylabel('Shortage Cost M$')
-suptitle('Time Step 5: 2070-2090')
+% subplot(3,1,3)
+% boxplot(avgShortNow/1E6, 'Labels',cellstr(string(s_T_abs(44:44+51))))
+% title('Distribution of Shortage Cost by mean T')
+% xlabel('Mean T [degrees C]')
+% ylabel('Shortage Cost M$')
+% suptitle('Time Step 5: 2070-2090')
 
 % Add yield to these
 

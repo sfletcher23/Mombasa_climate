@@ -4,12 +4,12 @@ function  [yield, K, demand, unmet_dom, unmet_ag]  = runoff2yield(inflow, T, P, 
 % Storage is a scalar 
 
 numYears = runParam.steplen;
-numRuns = climParam.numSampTS;
+[numRuns,~] = size(T);
 
 % check numRuns correct
 
 
-dmd_dom = cmpd2mcmpy(150000) * ones(numRuns,12*numYears);
+dmd_dom = cmpd2mcmpy(186000) * ones(numRuns,12*numYears);   
 dmd_ag = repmat([2.5 1.5 0.8 2.0 1.9 2.9 3.6 0.6 0.5 0.3 0.2 3.1], numRuns,numYears);
 demand = dmd_dom + dmd_ag;
 dead_storage = 20;
@@ -30,18 +30,18 @@ for t = 1:numYears*12
     end
     
     % If demand is less than effective inflow, release all demand and add storage up to limit
-    if demand(:,t) < inflow(:,t) - env_flow - E(:,t)
-        release(:,t) = demand(:,t);
-        K(:,t) = min(Kprev - release(:,t) + inflow(:,t) - env_flow - E(:,t), eff_storage);
+    indLess = demand(:,t) < inflow(:,t) - env_flow - E(:,t);
+    release(indLess,t) = demand(indLess,t);
+    K(indLess,t) = min(Kprev - release(indLess,t) + inflow(indLess,t) - env_flow - E(indLess,t), eff_storage);
     % If demand is greater than effective inflow, but less than available storage, release all demand    
-    elseif demand(:,t) < Kprev + inflow(:,t) - env_flow - E(:,t) & demand(:,t) > inflow(:,t) - env_flow - E(:,t)
-        release(:,t) = demand(:,t);
-        K(:,t) = Kprev - release(:,t) + inflow(:,t) - env_flow - E(:,t); 
+    indMid = demand(:,t) < Kprev + inflow(:,t) - env_flow - E(:,t) & demand(:,t) > inflow(:,t) - env_flow - E(:,t);
+    release(indMid,t) = demand(indMid,t);
+    K(indMid,t) = Kprev - release(indMid,t) + inflow(indMid,t) - env_flow - E(indMid,t); 
     % If demand is greater than effective inflow and storage, release as much as available
-    else
-        release(:,t) = Kprev + inflow(:,t) - env_flow - E(:,t);
-        K(:,t) = 0;
-    end
+    indGreat = ~indLess & ~indMid;
+    release(indGreat,t) = Kprev + inflow(indGreat,t) - env_flow - E(indGreat,t);
+    K(indGreat,t) = 0;
+
 end
 
 % Ag demand is unmet first
