@@ -112,17 +112,22 @@ end
 
 if runParam.runTPts
 
-% Generate T and P timeseries based on T and P mean states
 T_ts = cell(M_T_abs,N);
 P_ts = cell(M_P_abs,N);
+
 for t = 1:N
+    [Tanom, Panom] = mean2TPtimeseriesMJL_2(t, runParam.steplen, climParam.numSampTS);
+    
     for i = 1:M_T_abs  
-        [T_ts{i,t}, ~] = mean2TPtimeseriesMJL(t, runParam.steplen, s_P_abs(1), s_T_abs(i), climParam.numSampTS);
+        T_ts{i,t} = Tanom + s_T_abs(i)*ones(size(Tanom));
     end
     
     for i = 1:M_P_abs  
-        [~, P_ts{i,t}] = mean2TPtimeseriesMJL(t, runParam.steplen, s_P_abs(i), s_T_abs(1), climParam.numSampTS);
+        Ptmp = Panom + s_P_abs(i)*ones(size(Tanom));
+        Ptmp(Ptmp<0) = 0;
+        P_ts{i,t} = Ptmp;
     end
+    
 end
 
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
