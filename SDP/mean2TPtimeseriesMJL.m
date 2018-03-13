@@ -14,6 +14,7 @@ function [T_ts, P_ts] = mean2TPtimeseriesMJL(timestep, steplen, sp, st, numsamp)
 % T_ts: monthly temp time series (numsamp x timestep*12)
 % P_ts: monthly precip time series (numsamp x timestep*12)
 
+rng('shuffle')
 
 % Create index for appropriate dates in Tij and Pij
 startdate = (1990-1900)*12 + 1; % First period starts in 1990

@@ -18,12 +18,12 @@ runParam = struct;
 runParam.N = 5;
 runParam.runSDP = false;
 runParam.steplen = 20; 
-runParam.runRunoff = false;
-runParam.runTPts = false;
-runParam.runoffPostProcess = false;
+runParam.runRunoff = true;
+runParam.runTPts = true;
+runParam.runoffPostProcess = true;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
-runParam.calcShortage = true;
+runParam.calcShortage = false;
 runParam.runoffLoadName = 'runoff_by_state_comb_March12_knn';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -234,7 +234,7 @@ if runParam.calcShortage
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
 
 else
-%     load(runParam.shortageLoadName);
+    load(runParam.shortageLoadName);
 end
 
     
