@@ -12,8 +12,9 @@ dcost = costmodel.dam_cost(index);
 
 if flex_storage
     added_storage = flex_storage - storage;
-    ecost = added_storage * costmodel.exp_unit_cost(index);
-    dcost = dcost * 1.1;
+    indexFlex = find(costmodel.storage == flex_storage);
+    ecost = added_storage * costmodel.exp_unit_cost(indexFlex);
+    dcost = dcost * 1.03;
 end
 
 

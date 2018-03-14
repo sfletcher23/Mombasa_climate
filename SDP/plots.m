@@ -2,7 +2,8 @@
 
 
 %% Analyze runoff and shortage
-
+if false
+    
 avgMAR = cellfun(@(x) mean(mean(x,2)), runoff);
 avgStd = cellfun(@(x) mean(std(x,0,2)), runoff);
 
@@ -52,6 +53,7 @@ ylabel('Mean Std of Runoff [MCM/y]')
 % suptitle('Time Step 5: 2070-2090')
 
 % Add yield to these
+end
 
 %% Expansion policy for flexible dam
 
@@ -81,8 +83,8 @@ XNow{3}(:,20) = XNow{3}(:,21);
 XNow{4} = X(:,:,3,4);
 XNow{4}(:,20) = XNow{4}(:,21);
 
-% XNow{5} = X(:,:,3,5);
-% XNow{5}(52:54,:) = 0;
+XNow{5} = X(:,:,3,5);
+XNow{5}(52:54,:) = 0;
 
 figure;
 colormap([0 0 0; .9 .9 .9])

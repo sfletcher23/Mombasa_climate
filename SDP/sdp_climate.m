@@ -16,15 +16,15 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = false;
+runParam.runSDP = true;
 runParam.steplen = 20; 
-runParam.runRunoff = true;
-runParam.runTPts = true;
-runParam.runoffPostProcess = true;
-runParam.forwardSim = false;
+runParam.runRunoff = false;
+runParam.runTPts = false;
+runParam.runoffPostProcess = false;
+runParam.forwardSim = true;
 runParam.calcTmat = false;
-runParam.calcShortage = false;
-runParam.runoffLoadName = 'runoff_by_state_comb_March12_knn';
+runParam.calcShortage = true;
+runParam.runoffLoadName = 'runoff_by_state_March13_knnboot';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
@@ -78,13 +78,17 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [60 80];
+storage = [80 120];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
             % 4 - expand flex dam
-dam_cost = [0 74436346 100192737 74436346*1.1 74436346*.4];
+
+dam_cost = zeros(1,length(a_exp));
+dam_cost(2) = storage2damcost(storage(1),0);
+dam_cost(3) = storage2damcost(storage(2),0);
+[dam_cost(4), dam_cost(5)] = storage2damcost(storage(1), storage(2));
 
   
 %% Calculate climate transition matrix 

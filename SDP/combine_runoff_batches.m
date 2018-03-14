@@ -1,10 +1,7 @@
 %% Combine runoff
 
-filenames = {'runoff_by_state_66205_12_Mar_2018_11_18_45', 'runoff_by_state_66206_12_Mar_2018_11_18_54', 'runoff_by_state_66208_12_Mar_2018_11_19_03', ...
-    'runoff_by_state_66209_12_Mar_2018_11_19_58', 'runoff_by_state_66210_12_Mar_2018_11_20_03' };
-filenames = {'runoff_by_state_66247_12_Mar_2018_14_56_19', 'runoff_by_state_66248_12_Mar_2018_14_56_21', 'runoff_by_state_66249_12_Mar_2018_14_56_20', ...
-    'runoff_by_state_66250_12_Mar_2018_14_57_12', 'runoff_by_state_66252_12_Mar_2018_15_00_47',};
-
+filenames = {'runoff_by_state_66270_13_Mar_2018_14_40_10', 'runoff_by_state_66271_13_Mar_2018_14_40_11', ...
+    'runoff_by_state_66272_13_Mar_2018_14_40_07', 'runoff_by_state_66276_13_Mar_2018_14_44_20' };
 
 runoff_post = cell(M_T_abs, M_P_abs, N);
 T_ts_post = cell(M_T_abs, N);

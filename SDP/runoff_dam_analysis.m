@@ -17,8 +17,8 @@ title('Distribution of Average MAR by mean P')
 xlabel('Mean P [mm/m]')
 ylabel('Mean MAR [MCM/y]')
 subplot(2,2,3)
-boxplot(avgStdNow ./ avgMarNow, 'Labels',cellstr(string(s_P_abs(1:28))))
-title('Distribution of Average Coefficient of Variation by mean P')
+boxplot(avgStdNow , 'Labels',cellstr(string(s_P_abs(1:28))))
+title('Distribution of Avg Std Dev by mean P')
 xlabel('Mean P [mm/m]')
 ylabel('Mean Std of Runoff [MCM/y]')
 
@@ -28,12 +28,12 @@ avgMarNow = avgMAR(44:44+51,:,5)';
 avgStdNow = avgStd(44:44+51,:,5)';
 subplot(2,2,2)
 boxplot(avgMarNow, 'Labels',cellstr(string(s_T_abs(44:44+51))))
-title('Distribution of Average MAR by mean T')
+title('Distribution of Avg MAR by mean T')
 xlabel('Mean T [degrees C]')
 ylabel('Mean MAR [MCM/y]')
 subplot(2,2,4)
-boxplot(avgStdNow ./ avgMarNow, 'Labels',cellstr(string(s_T_abs(44:44+51))))
-title('Distribution of Average Coefficient of Variation by mean T')
+boxplot(avgStdNow , 'Labels',cellstr(string(s_T_abs(44:44+51))))
+title('Distribution of Avg Std Dev by mean T')
 xlabel('Mean T [degrees C]')
 ylabel('Mean Std of Runoff [MCM/y]')
 
@@ -59,7 +59,7 @@ end
 
 %% Analyze yield and shortage costs
 
-storage = 55:5:80;
+storage = 60:10:110;
 
 unmet_ag = cell(M_T_abs, M_P_abs, length(storage), N);
 unmet_dom = cell(M_T_abs, M_P_abs, length(storage), N);
@@ -279,7 +279,7 @@ for i = 1:4
     subplot(2,2,i)
     boxplot(squeeze(avgTotalUnmet(:,indP(i),:)))
     xticklabels(cellstr(num2str(storage')))
-    ylim([0 300])
+    ylim([0 1000])
     xlabel('Storage [MCM]')
     ylabel('Mean unmet demand [MCM]')
     title(strcat('P state: ', num2str(s_P_abs(indP(i)))))
@@ -293,12 +293,37 @@ for i = 1:4
     subplot(2,2,i)
     boxplot(squeeze(avgTotalUnmet(indT(i),:,:)))
     xticklabels(cellstr(num2str(storage')))
-    ylim([0 300])
+    ylim([0 1000])
     xlabel('Storage [MCM]')
     ylabel('Mean unmet demand [MCM]')
     title(strcat('T state: ', num2str(s_T_abs(indT(i)))))
 end
 suptitle('Unmet demand by dam storage (variation across P)')
 
+%% Heatmaps Unmet demand
 
+avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
+storage = 60:10:110;
+
+% Heatmap 
+figure;
+clrmp = cbrewer('div','RdYlBu',40);
+colormap(clrmp)
+
+for i = 1:6
+    subplot(3,2,i)
+    colormap(gca, flipud(clrmp))
+    avgUnmetNow = avgUnmet(44:44+51,1:28,i,5);
+    imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)], flipud(avgUnmetNow))
+    c = colorbar;
+    caxis([0 700])
+    c.Label.String = 'MCM over 20 yrs'
+    xticks(s_P_abs(1): s_P_abs(28))
+    yticks(s_T_abs(44):.5: s_T_abs(44+51))
+    xticklabels(s_P_abs(1:28))
+    yticklabels(fliplr(s_T_abs(44):.5:s_T_abs(44+51)))
+    xlabel('P [mm/m]')
+    ylabel('T [degrees C]')
+    title(strcat('Storage: ', {' '}, num2str(storage(i)), {' '}, 'MCM'))
+end
 
