@@ -36,7 +36,7 @@ climParam.checkBins = false;
 costParam = struct;
 costParam.yieldprctl = 50;
 costParam.domShortage = 10;
-costParam.agShortage = 5;
+costParam.agShortage = 0;
 
 
 %% State and Action Definitions 
@@ -228,6 +228,7 @@ if runParam.calcShortage
 
                     [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
                         runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
+                    unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
                     unmet_ag(index_s_t, index_s_p, s, t) = prctile(sum(unmet_ag_mdl,2),costParam.yieldprctl);
                     unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_mdl,2),costParam.yieldprctl);
                     yield(index_s_t, index_s_p, s, t) = prctile(sum(yield_mdl,2),costParam.yieldprctl);
@@ -236,8 +237,8 @@ if runParam.calcShortage
         end
     end
 
-
-    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
+%     unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
+    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom_90 * costParam.domShortage) * 1E6; 
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
