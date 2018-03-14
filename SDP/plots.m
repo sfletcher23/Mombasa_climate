@@ -1,6 +1,6 @@
 %% Plots plots plots !!!
 
-
+decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 %% Analyze runoff and shortage
 if false
     
@@ -84,14 +84,16 @@ XNow{4} = X(:,:,3,4);
 XNow{4}(:,20) = XNow{4}(:,21);
 
 XNow{5} = X(:,:,3,5);
-XNow{5}(52:54,:) = 0;
+% XNow{5}(52:54,:) = 0;
 
 figure;
-colormap([0 0 0; .9 .9 .9])
+colormap( [0 0 0; .9 .9 .9])
 
 for i = 2:5
-    subplot(2,2,i-1)
-    imagesc([s_P_abs(vldPInd{i}(1)) s_P_abs(vldPInd{i}(end))],[s_T_abs(vldTInd{i}(1)) s_T_abs(vldTInd{i}(end))],  XNow{i}(vldTInd{i},vldPInd{i}))
+    ax = subplot(2,2,i-1);
+    imagesc([s_P_abs(vldPInd{i}(1)) s_P_abs(vldPInd{i}(end))],[s_T_abs(vldTInd{i}(1)) s_T_abs(vldTInd{i}(end))],  ...
+        XNow{i}(vldTInd{i},vldPInd{i}))
+    ax.YDir = 'normal';
 %     xticklabels(cellstr(string(s_P_abs(vldPInd{i}))))
 %     yticklabels(cellstr(string(s_T_abs(vldTInd{i}))))
     xlabel('Mean P [mm/m]')
@@ -103,9 +105,50 @@ for i = 2:5
         patch([100 100 101 101], [100 101 100 101], [0 0 0])
         patch([100 100 101 101], [100 101 100 101], [.9 .9 .9])
         legend('Do not expand','Expand')
-        legend('location', 'SE')
+        legend('location', 'NE')
     end
+    title(decade{i})
 end
 suptitle('Expansion Policy for Flexible Dam')
+
+
+%% Visualize value matrix for action 3 vs 4 in final time series
+
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+
+
+vldTInd{5} = 44:95;
+vldPInd{5} = 1:28;
+
+Vno = V(vldTInd{5},vldPInd{5},3,5);
+Vexp = V(vldTInd{5},vldPInd{5},4,5);
+Xexp = X(vldTInd{5},vldPInd{5},3,5);
+
+figure;
+ax = subplot(2,2,1);
+imagesc([s_P_abs(vldPInd{5}(1)) s_P_abs(vldPInd{5}(end))],[s_T_abs(vldTInd{5}(1)) s_T_abs(vldTInd{5}(end))],  Vno )
+colorbar
+title('No expand V')
+ax.YDir = 'normal';
+ax = subplot(2,2,2);
+imagesc([s_P_abs(vldPInd{5}(1)) s_P_abs(vldPInd{5}(end))],[s_T_abs(vldTInd{5}(1)) s_T_abs(vldTInd{5}(end))],  Vexp )
+colorbar
+title('Expand V')
+ax.YDir = 'normal';
+ax = subplot(2,2,3);
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('div','RdYlBu',45);
+colormap(clrmp)
+imagesc([s_P_abs(vldPInd{5}(1)) s_P_abs(vldPInd{5}(end))],[s_T_abs(vldTInd{5}(1)) s_T_abs(vldTInd{5}(end))],  Vexp -Vno )
+colorbar
+title('Expand V - No expand V')
+ax.YDir = 'normal';
+ax = subplot(2,2,4);
+imagesc([s_P_abs(vldPInd{5}(1)) s_P_abs(vldPInd{5}(end))],[s_T_abs(vldTInd{5}(1)) s_T_abs(vldTInd{5}(end))], Xexp)
+colorbar
+title('X')
+ax.YDir = 'normal';
+
+
 
 

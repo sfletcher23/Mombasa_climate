@@ -302,28 +302,32 @@ suptitle('Unmet demand by dam storage (variation across P)')
 
 %% Heatmaps Unmet demand
 
-avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
+% avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
 storage = 60:10:110;
 
 % Heatmap 
-figure;
-clrmp = cbrewer('div','RdYlBu',40);
+f = figure;
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('div','RdYlBu',45);
 colormap(clrmp)
+font_size = 13;
 
 for i = 1:6
-    subplot(3,2,i)
+    h(i) = subplot(3,2,i);
     colormap(gca, flipud(clrmp))
     avgUnmetNow = avgUnmet(44:44+51,1:28,i,5);
     imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)], flipud(avgUnmetNow))
     c = colorbar;
-    caxis([0 700])
-    c.Label.String = 'MCM over 20 yrs'
-    xticks(s_P_abs(1): s_P_abs(28))
-    yticks(s_T_abs(44):.5: s_T_abs(44+51))
-    xticklabels(s_P_abs(1:28))
-    yticklabels(fliplr(s_T_abs(44):.5:s_T_abs(44+51)))
+    caxis([0 300])
+    c.Label.String = 'MCM over 20 yrs';
+    xticks(s_P_abs(1):2: s_P_abs(28))
+    yticks(28:.5:30.5)
+    xticklabels(s_P_abs(1:2:28))
+    yticklabels(sprintf('%.1f\n', 30.5:-.5:28))
     xlabel('P [mm/m]')
     ylabel('T [degrees C]')
     title(strcat('Storage: ', {' '}, num2str(storage(i)), {' '}, 'MCM'))
 end
+suptitle('Unmet Demand by Reservoir Size')
+set(findall(f,'-property','FontSize'),'FontSize',font_size)
 
