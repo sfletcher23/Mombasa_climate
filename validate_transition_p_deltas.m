@@ -105,7 +105,7 @@ end
 
 
 % Plots
-if false
+if true
     
 figure;
 s = randi(numSamp,10);

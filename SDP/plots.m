@@ -1,6 +1,6 @@
 %% Plots plots plots !!!
 
-decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
+
 %% Analyze runoff and shortage
 if false
     
@@ -57,6 +57,7 @@ end
 
 %% Expansion policy for flexible dam
 
+decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 vldTInd = cell(1,5);
 vldPInd = cell(1,5);
 vldTInd{2} = 7:58;
@@ -111,6 +112,63 @@ for i = 2:5
 end
 suptitle('Expansion Policy for Flexible Dam')
 
+%% Version 2: Expansion policy for flexible dam
+
+figure;
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('qual','Set3',6);
+clrmp(1,:) = [1 1 1];
+colormap(clrmp)
+ax = gca;
+hold on
+
+% colormap( [0 0 0; 1 1 1])
+% 
+% patch([100 100 101 101], [100 101 100 101], [0 0 0])
+% patch([100 100 101 101], [100 101 100 101], [.9 .9 .9])
+% legend('Do not expand','Expand')
+% legend('location', 'NE')
+
+for i = 5:-1:2
+%     colormap([.9 .9 .9; clrmp(i,:)])
+    im = imagesc([s_P_abs(vldPInd{i}(1)) s_P_abs(vldPInd{i}(end))],[s_T_abs(vldTInd{i}(1)) s_T_abs(vldTInd{i}(end))],  ...
+        XNow{i}(vldTInd{i},vldPInd{i})/4*i ) ;
+    set(im, 'AlphaData', XNow{i}(vldTInd{i},vldPInd{i})/4);
+    p = patch([s_P_abs(vldPInd{i}(1))-.5 s_P_abs(vldPInd{i}(end))+.5 s_P_abs(vldPInd{i}(end))+.5  s_P_abs(vldPInd{i}(1))-.5],...
+        [s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2], ...
+        [1 1 1 ],'EdgeColor','black','FaceColor','none');
+    
+    
+    ax.YDir = 'normal';
+%     im.AlphaData = .5;
+%     xticklabels(cellstr(string(s_P_abs(vldPInd{i}))))
+%     yticklabels(cellstr(string(s_T_abs(vldTInd{i}))))
+   
+end
+
+xlabel('Mean P [mm/m]')
+ylabel('Mean T [degrees C]')
+xlim([s_P_abs(1)-1 s_P_abs(28)+1])
+ylim([s_T_abs(1) s_T_abs(95)+.2])
+
+title('Expansion Policy for Flexible Dam')
+
+%% disaster ugh
+
+if false
+figure
+[x,y,z] = meshgrid(s_P_abs(vldPInd{i}(1)):1:s_P_abs(vldPInd{i}(end)), ...
+    s_T_abs(vldTInd{i}(1)) :.05: s_T_abs(vldTInd{i}(end)), 2:1:5);
+x = s_P_abs(vldPInd{i}(1)):1: s_P_abs(vldPInd{i}(end));
+y = s_T_abs(vldTInd{i}(1)): .05 :s_T_abs(vldTInd{i}(end));
+z = [2 2 ];
+
+x = [s_P_abs(vldPInd{i}(1))-.5 s_P_abs(vldPInd{i}(end))+.5 s_P_abs(vldPInd{i}(end))+.5  s_P_abs(vldPInd{i}(1))-.5]; 
+y = [s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2];
+z = [2 2 2 2 ];
+fill3(x,y,z, 'k')
+end
+
 
 %% Visualize value matrix for action 3 vs 4 in final time series
 
@@ -148,6 +206,37 @@ imagesc([s_P_abs(vldPInd{5}(1)) s_P_abs(vldPInd{5}(end))],[s_T_abs(vldTInd{5}(1)
 colorbar
 title('X')
 ax.YDir = 'normal';
+
+%% Simulation
+
+%% Histogram of expansion time
+
+indExp = action == 4;
+expOverTime = zeros(size(action));
+expOverTime(indExp) = 1;
+[rExp,cExp] = find(expOverTime);
+expTimeLarge = accumarray(rExp,cExp,[size(expOverTime,1),1],@min,6);
+indNever = find(sum(expOverTime,2) == 0 );
+countNever = numel(indNever);
+figure;
+yLarge = histc(expTimeLarge, [2:5]);
+bar(2:5, [yLarge ], 'stacked')
+hold on 
+bar(6, countNever, 'k')
+labels = cell(1,5);
+labels(1:4) = decade(2:5);
+labels{5} = 'Never';
+ax = gca;
+ax.XTick = 2:6;
+ax.XTickLabel = labels;
+xlabel('Expansion Time')
+ylabel('Frequency')
+legend('Build',  'Never build')
+legend('Location', 'NW')
+title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
+
+%% CDF of flex vs static
+
 
 
 

@@ -16,15 +16,15 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = true;
+runParam.runSDP = false;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
 runParam.runTPts = false;
 runParam.runoffPostProcess = false;
 runParam.forwardSim = true;
 runParam.calcTmat = false;
-runParam.calcShortage = true;
-runParam.runoffLoadName = 'runoff_by_state_March13_knnboot';
+runParam.calcShortage = false;
+runParam.runoffLoadName = 'runoff_by_state_Mar13_knnboot';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
@@ -323,7 +323,7 @@ for t = linspace(N,1,N)
                     
                     % In first time period, assume have dam built
                     if t == 1
-                        if a == 3
+                        if a == 2
                             short_ind = 2; % large capacity
                         else 
                              short_ind = 1;    % small capacity
@@ -427,122 +427,150 @@ end
 
 if runParam.forwardSim
     
-R = 10;
+% 3 runs: flex, large, small
+    
+R = 1000;
 N = runParam.N;
 
-T_state = zeros(R,N);
-P_state = zeros(R,N);
-C_state = zeros(R,N);
-action = zeros(R,N);
-damCostTime = zeros(R,N);
-shortageCostTime = zeros(R,N);
-totalCostTime = zeros(R,N); 
+T_state = zeros(R,N,3);
+P_state = zeros(R,N,3);
+C_state = zeros(R,N,3);
+action = zeros(R,N,3);
+damCostTime = zeros(R,N,3);
+shortageCostTime = zeros(R,N,3);
+totalCostTime = zeros(R,N,3); 
 
-T_state(:,1) = climParam.T0_abs;
-P_state(:,1) = climParam.P0_abs;
-C_state(:,1) = 1;
+T_state(:,1,:) = climParam.T0_abs;
+P_state(:,1,:) = climParam.P0_abs;
+C_state(:,1,1) = 3;
+C_state(:,1,2) = 2;
+C_state(:,1,3) = 1;
 
-for i = 1:R
-    for t = 1:N
+for k = 1:3
+    for i = 1:R
+        for t = 1:N
 
-        % Choose best action given current state
-        index_t = find(T_state(i,t) == s_T_abs);
-        index_p = find(P_state(i,t) == s_P_abs);
-        index_c = find(C_state(i,t) == s_C);
-        action(i,t) = X(index_t, index_p, index_c, t);
-
-        % Save costs of that action
-        
-        % Get current capacity and action
-        sc = C_state(i,t);
-        a = action(i,t);
-        
-        % Select which capacity is currently available
-        if sc == 1 || sc == 3
-            short_ind = 1;    % small capacity
-        else
-            short_ind = 2; % large capacity
-        end
-
-        % In first time period, assume have dam built
-        if t == 1
-            if a == 3
-                short_ind = 2; % large capacity
-            else 
-                 short_ind = 1;    % small capacity
-            end
-        end
-
-        % Assume new expansion capacity comes online this period
-        if a == 4
-            short_ind = 2; % large capacity
-        end
-        
-        % Get shortage and dam costs
-        shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t);
-        ind_dam = find(a == a_exp);
-        damCostTime(i,t) = dam_cost(ind_dam);
-        totalCostTime(i,t) = sCost + dCost;
-
-
-        % Simulate transition to next state
-        % Capacity transmat vector
-        T_cap = zeros(1,M_C);
-        if t == 1
-            % In first time period, get whatever dam you picked
-            T_cap(a) = 1;
-        else
-            % Otherwise, either stay in current or move to expanded
-            switch a
-                case 0
-                    T_cap(sc) = 1;
-                case 4
-                    T_cap(4) = 1;
-            end                         
-        end
-
-        % Temperature transmat vector
-        T_Temp_row = T_Temp(:,index_t, t)';
-        if sum(isnan(T_Temp_row)) > 0
-            error('Nan in T_Temp_row')
-        end
-
-        % Precipitation transmat vector
-        T_Precip_row = T_Precip(:,index_p, t)';
-        if sum(isnan(T_Precip_row)) > 0
-            error('Nan in T_Precip_row')
-        end
-        % Combine trans vectors into matrix
-     	TRows = cell(3,1);
-        TRows{1} = T_Temp_row;
-        TRows{2} = T_Precip_row;
-        TRows{3} = T_cap;
-        [ T_current ] = transrow2mat( TRows );
-        
-        % Simulate next state
-        if t < N
-            T_current_1D = reshape(T_current,[1 numel(T_current)]);
-            T_current_1D_cumsum = cumsum(T_current_1D);
-            p = rand();
-            index = find(p < T_current_1D_cumsum,1);
-            [ind_s1, ind_s2, ind_s3] = ind2sub(size(T_current),index);
-                % Test sample
-                margin = 1e-10;
-                if (T_current(ind_s1, ind_s2, ind_s3) < margin)
-                    error('Invalid sample from T_current')
+            % Choose best action given current state
+            index_t = find(T_state(i,t) == s_T_abs);
+            index_p = find(P_state(i,t) == s_P_abs);
+            index_c = find(C_state(i,t) == s_C);
+            
+            % In flex case follow policy, otherwise restrict to large or
+            % small and then no exp
+            if t==1
+                switch k
+                    case 1
+                        action(i,t,k) = X(index_t, index_p, index_c, t);
+                    case 2
+                        action(i,t,k) = 2;
+                    case 3
+                        action(i,t,k) = 1;
                 end
+            else 
+                switch k
+                    case 1
+                        action(i,t,k) = X(index_t, index_p, index_c, t);
+                    case 2
+                        action(i,t,k) = 0;
+                    case 3
+                        action(i,t,k) = 0;
+                end
+            end
+            
+            % Save costs of that action
 
-            T_state(i,t+1) = s_T_abs(ind_s1);
-            P_state(i,t+1) = s_P_abs(ind_s2);
-            C_state(i,t+1) = s_C(ind_s3);
+            % Get current capacity and action
+            sc = C_state(i,t);
+            a = action(i,t);
+
+            % Select which capacity is currently available
+            if sc == 1 || sc == 3
+                short_ind = 1;    % small capacity
+            else
+                short_ind = 2; % large capacity
+            end
+
+            % In first time period, assume have dam built
+            if t == 1
+                if a == 2
+                    short_ind = 2; % large capacity
+                else 
+                    short_ind = 1;    % small capacity
+                end
+            end
+
+            % Assume new expansion capacity comes online this period
+            if a == 4
+                short_ind = 2; % large capacity
+            end
+
+            % Get shortage and dam costs
+            shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t);
+            ind_dam = find(a == a_exp);
+            damCostTime(i,t) = dam_cost(ind_dam);
+            totalCostTime(i,t) = shortageCostTime(i,t) + damCostTime(i,t);
+
+
+            % Simulate transition to next state
+            % Capacity transmat vector
+            T_cap = zeros(1,M_C);
+            if t == 1
+                % In first time period, get whatever dam you picked
+                T_cap(a) = 1;
+            else
+                % Otherwise, either stay in current or move to expanded
+                switch a
+                    case 0
+                        T_cap(sc) = 1;
+                    case 4
+                        T_cap(4) = 1;
+                end                         
+            end
+
+            % Temperature transmat vector
+            T_Temp_row = T_Temp(:,index_t, t)';
+            if sum(isnan(T_Temp_row)) > 0
+                error('Nan in T_Temp_row')
+            end
+
+            % Precipitation transmat vector
+            T_Precip_row = T_Precip(:,index_p, t)';
+            if sum(isnan(T_Precip_row)) > 0
+                error('Nan in T_Precip_row')
+            end
+            % Combine trans vectors into matrix
+            TRows = cell(3,1);
+            TRows{1} = T_Temp_row;
+            TRows{2} = T_Precip_row;
+            TRows{3} = T_cap;
+            [ T_current ] = transrow2mat( TRows );
+
+            % Simulate next state
+            if t < N
+                T_current_1D = reshape(T_current,[1 numel(T_current)]);
+                T_current_1D_cumsum = cumsum(T_current_1D);
+                p = rand();
+                index = find(p < T_current_1D_cumsum,1);
+                [ind_s1, ind_s2, ind_s3] = ind2sub(size(T_current),index);
+                    % Test sample
+                    margin = 1e-10;
+                    if (T_current(ind_s1, ind_s2, ind_s3) < margin)
+                        error('Invalid sample from T_current')
+                    end
+
+                T_state(i,t+1) = s_T_abs(ind_s1);
+                P_state(i,t+1) = s_P_abs(ind_s2);
+                C_state(i,t+1) = s_C(ind_s3);
+
+            end
+
+
 
         end
-        
-        
 
     end
-
 end
+
 
 end
 
