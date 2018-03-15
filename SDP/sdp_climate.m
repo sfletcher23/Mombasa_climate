@@ -16,7 +16,7 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = true;
+runParam.runSDP = false;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
 runParam.runTPts = false;
@@ -35,7 +35,7 @@ climParam.checkBins = false;
 
 costParam = struct;
 costParam.yieldprctl = 50;
-costParam.domShortage = 5;
+costParam.domShortage = 15;
 costParam.agShortage = 0;
 
 
@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [90 120]
+storage = [110 130]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -228,9 +228,9 @@ if runParam.calcShortage
 
                     [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
                         runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
-                    unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
+                    unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
                     unmet_ag(index_s_t, index_s_p, s, t) = prctile(sum(unmet_ag_mdl,2),costParam.yieldprctl);
-                    unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_mdl,2),costParam.yieldprctl);
+                    unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_90,2),costParam.yieldprctl);
                     yield(index_s_t, index_s_p, s, t) = prctile(sum(yield_mdl,2),costParam.yieldprctl);
                 end
             end
@@ -238,7 +238,7 @@ if runParam.calcShortage
     end
 
 %     unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
-    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom_90 * costParam.domShortage) * 1E6; 
+    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')

@@ -153,6 +153,38 @@ ylim([s_T_abs(1) s_T_abs(95)+.2])
 
 title('Expansion Policy for Flexible Dam')
 
+%% Heatmap for shortage cost
+
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('qual','Set3',6);
+clrmp(1,:) = [1 1 1];
+colormap(clrmp)
+ax = gca;
+hold on
+
+for i = 2:5
+    ax = subplot(2,2,i-1);
+    imagesc([s_P_abs(vldPInd{i}(1)) s_P_abs(vldPInd{i}(end))],[s_T_abs(vldTInd{i}(1)) s_T_abs(vldTInd{i}(end))],  ...
+        XNow{i}(vldTInd{i},vldPInd{i}), [0 4])
+    ax.YDir = 'normal';
+%     xticklabels(cellstr(string(s_P_abs(vldPInd{i}))))
+%     yticklabels(cellstr(string(s_T_abs(vldTInd{i}))))
+    xlabel('Mean P [mm/m]')
+    ylabel('Mean T [degrees C]')
+    xlim([s_P_abs(1)-1 s_P_abs(28)+1])
+    ylim([s_T_abs(1) s_T_abs(95)+.2])
+    if i == 2
+        hold on
+        patch([100 100 101 101], [100 101 100 101], [.9 .9 .9])
+        patch([100 100 101 101], [100 101 100 101], [0 0 0])
+        legend('Do not expand','Expand')
+        legend('location', 'NE')
+    end
+    title(decade{i})
+end
+
+
+
 %% disaster ugh
 
 if false
