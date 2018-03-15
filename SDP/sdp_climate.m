@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [80 120];
+storage = [100 120];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -321,14 +321,14 @@ for t = linspace(N,1,N)
                         short_ind = 2; % large capacity
                     end
                     
-                    % In first time period, assume have dam built
-                    if t == 1
-                        if a == 2
-                            short_ind = 2; % large capacity
-                        else 
-                             short_ind = 1;    % small capacity
-                        end
-                    end
+%                     % In first time period, assume have dam built
+%                     if t == 1
+%                         if a == 2
+%                             short_ind = 2; % large capacity
+%                         else 
+%                              short_ind = 1;    % small capacity
+%                         end
+%                     end
                     
                     % Assume new expansion capacity comes online this period
                     if a == 4
@@ -505,10 +505,10 @@ for k = 1:3
             end
 
             % Get shortage and dam costs
-            shortageCostTime(i,t) = shortageCost(index_t, index_p, short_ind, t);
+            shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, t);
             ind_dam = find(a == a_exp);
-            damCostTime(i,t) = dam_cost(ind_dam);
-            totalCostTime(i,t) = shortageCostTime(i,t) + damCostTime(i,t);
+            damCostTime(i,t,k) = dam_cost(ind_dam);
+            totalCostTime(i,t,k) = shortageCostTime(i,t,k) + damCostTime(i,t,k);
 
 
             % Simulate transition to next state
@@ -558,9 +558,9 @@ for k = 1:3
                         error('Invalid sample from T_current')
                     end
 
-                T_state(i,t+1) = s_T_abs(ind_s1);
-                P_state(i,t+1) = s_P_abs(ind_s2);
-                C_state(i,t+1) = s_C(ind_s3);
+                T_state(i,t+1,k) = s_T_abs(ind_s1);
+                P_state(i,t+1,k) = s_P_abs(ind_s2);
+                C_state(i,t+1,k) = s_C(ind_s3);
 
             end
 
