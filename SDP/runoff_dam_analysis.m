@@ -59,7 +59,7 @@ end
 
 %% Analyze yield and shortage costs
 
-storage = 60:10:110;
+storage = [105 130];
 
 unmet_ag = cell(M_T_abs, M_P_abs, length(storage), N);
 unmet_dom = cell(M_T_abs, M_P_abs, length(storage), N);
@@ -300,7 +300,7 @@ for i = 1:4
 end
 suptitle('Unmet demand by dam storage (variation across P)')
 
-%% Heatmaps Unmet demand
+%% Heatmaps Unmet demand by storage
 
 % avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
 storage = 60:10:110;
@@ -330,4 +330,5 @@ for i = 1:6
 end
 suptitle('Unmet Demand by Reservoir Size')
 set(findall(f,'-property','FontSize'),'FontSize',font_size)
+
 

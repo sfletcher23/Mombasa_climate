@@ -154,7 +154,7 @@ ylim([s_T_abs(1) s_T_abs(95)+.2])
 title('Expansion Policy for Flexible Dam')
 
 %% Heatmap for shortage cost
-
+if false
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
 clrmp = cbrewer('qual','Set3',6);
 clrmp(1,:) = [1 1 1];
@@ -183,7 +183,7 @@ for i = 2:5
     title(decade{i})
 end
 
-
+end
 
 %% disaster ugh
 
@@ -281,6 +281,50 @@ c2 = cdfplot(totalCostLarge/1E6);
 c2.LineWidth = 1.5;
 c3 = cdfplot(totalCostSmall/1E6);
 c3.LineWidth = 1.5;
+
+%% Heatmaps Unmet demand by time
+
+% Heatmap 
+f = figure;
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('div','RdYlBu',45);
+colormap(clrmp)
+font_size = 13;
+
+for i = 1:6
+    h(i) = subplot(3,2,i);
+    colormap(gca, flipud(clrmp))
+    avgUnmetNow = shortageCost(44:58,9:16,1,i);
+    imagesc([s_P_abs(9) s_P_abs(16)],[s_T_abs(44) s_T_abs(58)], flipud(avgUnmetNow))
+    c = colorbar;
+    caxis([0 300])
+    c.Label.String = 'MCM over 20 yrs';
+    xticks(s_P_abs(9):2: s_P_abs(16))
+    yticks(s_T_abs(44):.5: s_T_abs(58))
+    xticklabels(s_P_abs(1:2:28))
+    yticklabels(sprintf('%.1f\n',s_T_abs(58):-.5:s_T_abs(44)))
+    xlabel('P [mm/m]')
+    ylabel('T [degrees C]')
+    title(strcat('Time: ', {' '}, num2str(i)))
+end
+suptitle('Unmet Demand by time')
+set(findall(f,'-property','FontSize'),'FontSize',font_size)
+
+%% testing
+
+avgMAR = cellfun(@(x) mean(mean(x,2)), runoff);
+avgStdRun = cellfun(@(x) mean(std(x)), runoff);
+
+std1 = avgStdRun(7:25,10,1)
+std2 = avgStdRun(7:25,10,2)
+mar1 = avgMAR(7:25,10,1)
+mar2 = avgMAR(7:25,10,2)
+yield1 = yield(7:25,10,1,1)
+yield2 = yield(7:25,10,1,2)
+unmet1 = unmet_dom(7:25,10,1,1)
+unmet2 = unmet_dom(7:25,10,1,2)
+
+
 
 
 

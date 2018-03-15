@@ -18,9 +18,9 @@ runParam = struct;
 runParam.N = 5;
 runParam.runSDP = false;
 runParam.steplen = 20; 
-runParam.runRunoff = false;
-runParam.runTPts = false;
-runParam.runoffPostProcess = false;
+runParam.runRunoff = true;
+runParam.runTPts = true;
+runParam.runoffPostProcess = true;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
 runParam.calcShortage = true;
@@ -30,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 25;
+climParam.numSampTS = 2;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [110 130]
+storage = [100 130]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -108,7 +108,10 @@ end
 for t = 1:N
     index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
-
+    
+    % Don't prune
+    index_s_p_time{t} = 1:length(M_P_abs);
+    index_s_p_time{t} = 1:length(M_T_abs);
 end
 
 
@@ -119,8 +122,9 @@ if runParam.runTPts
 T_ts = cell(M_T_abs,N);
 P_ts = cell(M_P_abs,N);
 
+
+[Tanom, Panom] = mean2TPtimeseriesMJL_2(1, runParam.steplen, climParam.numSampTS);
 for t = 1:N
-    [Tanom, Panom] = mean2TPtimeseriesMJL_2(t, runParam.steplen, climParam.numSampTS);
     
     for i = 1:M_T_abs  
         T_ts{i,t} = Tanom + s_T_abs(i)*ones(size(Tanom));
@@ -151,7 +155,7 @@ if ~isempty(getenv('SLURM_JOB_ID'))
     parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
 end
 
-for t = 1:N
+for t = 1
     
     % loop over available temp states
     index_s_t_thisPeriod = index_s_t_time{t}; 
@@ -172,6 +176,11 @@ for t = 1:N
         runoff(i, :, t) = runoff_temp;
         
     end
+end
+
+
+for t = 1:N
+    runoff(:, :, t) = runoff(:,:,1);
 end
 
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
@@ -229,9 +238,9 @@ if runParam.calcShortage
                     [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
                         runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
                     unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
-                    unmet_ag(index_s_t, index_s_p, s, t) = prctile(sum(unmet_ag_mdl,2),costParam.yieldprctl);
-                    unmet_dom(index_s_t, index_s_p, s, t) = prctile(sum(unmet_dom_90,2),costParam.yieldprctl);
-                    yield(index_s_t, index_s_p, s, t) = prctile(sum(yield_mdl,2),costParam.yieldprctl);
+                    unmet_ag(index_s_t, index_s_p, s, t) = mean(sum(unmet_ag_mdl,2));
+                    unmet_dom(index_s_t, index_s_p, s, t) = mean(sum(unmet_dom_90,2));
+                    yield(index_s_t, index_s_p, s, t) = mean(sum(yield_mdl,2));
                 end
             end
         end
@@ -451,9 +460,9 @@ for k = 1:3
         for t = 1:N
 
             % Choose best action given current state
-            index_t = find(T_state(i,t) == s_T_abs);
-            index_p = find(P_state(i,t) == s_P_abs);
-            index_c = find(C_state(i,t) == s_C);
+            index_t = find(T_state(i,t,k) == s_T_abs);
+            index_p = find(P_state(i,t,k) == s_P_abs);
+            index_c = find(C_state(i,t,k) == s_C);
             
             % In flex case follow exp policy, otherwise restrict to large or
             % small and then no exp
@@ -480,8 +489,8 @@ for k = 1:3
             % Save costs of that action
 
             % Get current capacity and action
-            sc = C_state(i,t);
-            a = action(i,t);
+            sc = C_state(i,t,k);
+            a = action(i,t,k);
 
             % Select which capacity is currently available
             if sc == 1 || sc == 3
@@ -570,6 +579,15 @@ for k = 1:3
 
     end
 end
+
+
+% if runParam.saveOn
+%     
+%     savename_results = strcat('results', jobid,'_', datetime);
+%     save(savename_results)
+%     
+% end
+
 
 
 end
