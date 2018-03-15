@@ -212,11 +212,11 @@ ax.YDir = 'normal';
 %% Histogram of expansion time
 
 indExp = action == 4;
-expOverTime = zeros(size(action));
+expOverTime = zeros(size(action(:,:,1)));
 expOverTime(indExp) = 1;
-[rExp,cExp] = find(expOverTime);
-expTimeLarge = accumarray(rExp,cExp,[size(expOverTime,1),1],@min,6);
-indNever = find(sum(expOverTime,2) == 0 );
+[rExp,cExp] = find(expOverTime(:,:,1));
+expTimeLarge = accumarray(rExp,cExp,[size(expOverTime(:,:,1),1),1],@min,6);
+indNever = find(sum(expOverTime(:,:,1),2) == 0 );
 countNever = numel(indNever);
 figure;
 yLarge = histc(expTimeLarge, [2:5]);
@@ -237,7 +237,9 @@ title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
 
 %% CDF of flex vs static
 
-
+totalCostFlex = totalCostTime(:,:,1);
+totalCostLarge = totalCostTime(:,:,2);
+totalCostSmall = totalCostTime(:,:,3);
 
 
 
