@@ -16,14 +16,14 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = false;
+runParam.runSDP = true;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
 runParam.runTPts = false;
 runParam.runoffPostProcess = false;
-runParam.forwardSim = true;
+runParam.forwardSim = false;
 runParam.calcTmat = false;
-runParam.calcShortage = false;
+runParam.calcShortage = true;
 runParam.runoffLoadName = 'runoff_by_state_Mar13_knnboot';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [100 120];
+storage = [120 140];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -321,14 +321,14 @@ for t = linspace(N,1,N)
                         short_ind = 2; % large capacity
                     end
                     
-%                     % In first time period, assume have dam built
-%                     if t == 1
-%                         if a == 2
-%                             short_ind = 2; % large capacity
-%                         else 
-%                              short_ind = 1;    % small capacity
-%                         end
-%                     end
+                    % In first time period, assume have dam built
+                    if t == 1
+                        if a == 2
+                            short_ind = 2; % large capacity
+                        else 
+                            short_ind = 1;    % small capacity
+                        end
+                    end
                     
                     % Assume new expansion capacity comes online this period
                     if a == 4
