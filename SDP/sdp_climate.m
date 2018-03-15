@@ -23,7 +23,7 @@ runParam.runTPts = true;
 runParam.runoffPostProcess = true;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
-runParam.calcShortage = true;
+runParam.calcShortage = false;
 runParam.runoffLoadName = 'runoff_by_state_Mar13_knnboot';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -89,6 +89,7 @@ dam_cost = zeros(1,length(a_exp));
 dam_cost(2) = storage2damcost(storage(1),0);
 dam_cost(3) = storage2damcost(storage(2),0);
 [dam_cost(4), dam_cost(5)] = storage2damcost(storage(1), storage(2));
+(dam_cost(3) - dam_cost(2))/dam_cost(2)
 
   
 %% Calculate climate transition matrix 
@@ -110,8 +111,8 @@ for t = 1:N
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
     
     % Don't prune
-    index_s_p_time{t} = 1:length(M_P_abs);
-    index_s_p_time{t} = 1:length(M_T_abs);
+    index_s_p_time{t} = 1:length(s_P_abs);
+    index_s_t_time{t} = 1:length(s_T_abs);
 end
 
 
