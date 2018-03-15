@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [90 120];
+storage = [90 120]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -213,9 +213,9 @@ end
 
 if runParam.calcShortage
 
-    unmet_ag = zeros(M_T_abs, M_P_abs, length(storage), N);
-    unmet_dom = zeros(M_T_abs, M_P_abs, length(storage), N);
-    yield = zeros(M_T_abs, M_P_abs, length(storage), N);
+    unmet_ag = nan(M_T_abs, M_P_abs, length(storage), N);
+    unmet_dom = nan(M_T_abs, M_P_abs, length(storage), N);
+    yield = nan(M_T_abs, M_P_abs, length(storage), N);
 
     for t = 1:N
         index_s_p_thisPeriod = index_s_p_time{t}; 
@@ -429,7 +429,7 @@ if runParam.forwardSim
     
 % 3 runs: flex, large, small
     
-R = 1000;
+R = 100;
 N = runParam.N;
 
 T_state = zeros(R,N,3);
@@ -455,12 +455,12 @@ for k = 1:3
             index_p = find(P_state(i,t) == s_P_abs);
             index_c = find(C_state(i,t) == s_C);
             
-            % In flex case follow policy, otherwise restrict to large or
+            % In flex case follow exp policy, otherwise restrict to large or
             % small and then no exp
             if t==1
                 switch k
                     case 1
-                        action(i,t,k) = X(index_t, index_p, index_c, t);
+                        action(i,t,k) = 3;
                     case 2
                         action(i,t,k) = 2;
                     case 3
