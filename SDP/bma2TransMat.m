@@ -51,9 +51,10 @@ end
 p = rand(climParam.numSamp_delta2abs,N+1);
 state_ind_P = zeros(climParam.numSamp_delta2abs,N);
 state_ind_T = zeros(climParam.numSamp_delta2abs,N+1);
-state_ind_P(:,1) = find(climParam.P0==s_P);
 T0_ind = randi(M_T,climParam.numSamp_delta2abs,1);
+P0_ind = randi(M_P,climParam.numSamp_delta2abs,1);
 
+state_ind_P(:,1) = P0_ind;
 state_ind_T(:,1) = T0_ind;
 for i = 1:climParam.numSamp_delta2abs
     for t = 1:N
@@ -64,15 +65,23 @@ end
 T_delta_over_time = s_T(state_ind_T);
 P_delta_over_time = s_P(state_ind_P);
 
+
+% Randomize starting point to get more variation in time series
+T0_abs = repmat([climParam.T0_abs - T_step*2; climParam.T0_abs - T_step; climParam.T0_abs; ...
+    climParam.T0_abs + T_step; climParam.T0_abs + T_step*2],climParam.numSamp_delta2abs/5,1);
+P0_abs = repmat([climParam.P0_abs - P_step*2; climParam.P0_abs - P_step; climParam.P0_abs; ...
+    climParam.P0_abs + P_step; climParam.P0_abs + P_step*2],climParam.numSamp_delta2abs/5,1);
+
 % Sum Temp delta time series to get absolutes
-T_over_time = cumsum( T_delta_over_time,2) + climParam.T0_abs;
+T_over_time = cumsum( T_delta_over_time,2) + repmat(T0_abs,1,6);
 
 % Precip is percent change
 P_over_time = zeros(climParam.numSamp_delta2abs, N+1);
+
 for i = 1:climParam.numSamp_delta2abs
     for t = 1:6
         if t == 1 
-            P_over_time(i,t) = climParam.P0_abs;
+            P_over_time(i,t) = P0_abs(i);
         else
             P_over_time(i,t) = P_over_time(i,t-1) * (1+P_delta_over_time(i,t));
         end

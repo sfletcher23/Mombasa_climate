@@ -88,12 +88,12 @@ XNow{5} = X(:,:,3,5);
 % XNow{5}(52:54,:) = 0;
 
 figure;
-colormap( [0 0 0; .9 .9 .9])
+colormap( [ .9 .9 .9; 0 0 0])
 
 for i = 2:5
     ax = subplot(2,2,i-1);
     imagesc([s_P_abs(vldPInd{i}(1)) s_P_abs(vldPInd{i}(end))],[s_T_abs(vldTInd{i}(1)) s_T_abs(vldTInd{i}(end))],  ...
-        XNow{i}(vldTInd{i},vldPInd{i}))
+        XNow{i}(vldTInd{i},vldPInd{i}), [0 4])
     ax.YDir = 'normal';
 %     xticklabels(cellstr(string(s_P_abs(vldPInd{i}))))
 %     yticklabels(cellstr(string(s_T_abs(vldTInd{i}))))
@@ -103,8 +103,8 @@ for i = 2:5
     ylim([s_T_abs(1) s_T_abs(95)+.2])
     if i == 2
         hold on
-        patch([100 100 101 101], [100 101 100 101], [0 0 0])
         patch([100 100 101 101], [100 101 100 101], [.9 .9 .9])
+        patch([100 100 101 101], [100 101 100 101], [0 0 0])
         legend('Do not expand','Expand')
         legend('location', 'NE')
     end
@@ -237,9 +237,18 @@ title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
 
 %% CDF of flex vs static
 
-totalCostFlex = totalCostTime(:,:,1);
-totalCostLarge = totalCostTime(:,:,2);
-totalCostSmall = totalCostTime(:,:,3);
+totalCostFlex = sum(totalCostTime(:,:,1),2);
+totalCostLarge = sum(totalCostTime(:,:,2),2);
+totalCostSmall = sum(totalCostTime(:,:,3),2);
+
+figure;
+hold on
+c1 = cdfplot(totalCostFlex/1E6);
+c1.LineWidth = 1.5;
+c2 = cdfplot(totalCostLarge/1E6);
+c2.LineWidth = 1.5;
+c3 = cdfplot(totalCostSmall/1E6);
+c3.LineWidth = 1.5;
 
 
 
