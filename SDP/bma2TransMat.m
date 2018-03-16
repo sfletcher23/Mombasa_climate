@@ -6,6 +6,18 @@ function [T_Temp_abs, T_Precip_abs, T_Temp_delta, T_Precip_delta, T_over_time, P
 % absolute values
 
 
+T_abs_max = max(s_T) * N;
+s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
+M_T_abs = length(s_T_abs);
+T_bins_abs = [s_T_abs-climParam.T_delta/2  s_T_abs(end)+climParam.T_delta/2];
+T_Temp_abs = zeros(M_T_abs,M_T_abs,N);  
+
+P_abs_max = max(s_P) * N;
+s_P_abs = 66:1:97;
+M_P_abs = length(s_P_abs);
+P_bins_abs = [s_P_abs-climParam.P_delta/2  s_P_abs(end)+climParam.P_delta/2];
+T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
+
 %% Deltas
 
 T_step = s_T(2) - s_T(1);
@@ -67,10 +79,10 @@ P_delta_over_time = s_P(state_ind_P);
 
 
 % Randomize starting point to get more variation in time series
-T0_abs = repmat([climParam.T0_abs - T_step*2; climParam.T0_abs - T_step; climParam.T0_abs; ...
-    climParam.T0_abs + T_step; climParam.T0_abs + T_step*2],climParam.numSamp_delta2abs/5,1);
-P0_abs = repmat([climParam.P0_abs - P_step*2; climParam.P0_abs - P_step; climParam.P0_abs; ...
-    climParam.P0_abs + P_step; climParam.P0_abs + P_step*2],climParam.numSamp_delta2abs/5,1);
+T0_abs_ind = randi(M_T_abs,climParam.numSamp_delta2abs,1);
+P0_abs_ind = randi(M_P_abs,climParam.numSamp_delta2abs,1);
+T0_abs = s_T_abs(T0_abs_ind)';
+P0_abs = s_P_abs(P0_abs_ind)';
 
 % Sum Temp delta time series to get absolutes
 T_over_time = cumsum( T_delta_over_time,2) + repmat(T0_abs,1,6);
@@ -92,17 +104,7 @@ end
 
 %% Absolutes from time series
 
-T_abs_max = max(s_T) * N;
-s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
-M_T_abs = length(s_T_abs);
-T_bins = [s_T_abs-climParam.T_delta/2  s_T_abs(end)+climParam.T_delta/2];
-T_Temp_abs = zeros(M_T_abs,M_T_abs,N);  
 
-P_abs_max = max(s_P) * N;
-s_P_abs = 66:1:97;
-M_P_abs = length(s_P_abs);
-P_bins = [s_P_abs-climParam.P_delta/2  s_P_abs(end)+climParam.P_delta/2];
-T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 
 for i = 1:length(s_T_abs)
     for t = 1:N
@@ -110,7 +112,7 @@ for i = 1:length(s_T_abs)
         indexNow = find(T_over_time(:,t) == T_current);
         relevant_deltas = T_over_time(indexNow,t+1) - T_over_time(indexNow,t);
         T_next = T_current + relevant_deltas;
-        T_Temp_abs(:,i,t) = histcounts(T_next, T_bins, 'Normalization', 'Probability');     
+        T_Temp_abs(:,i,t) = histcounts(T_next, T_bins_abs, 'Normalization', 'Probability');     
     end
 end
 
@@ -121,9 +123,33 @@ for i = 1:length(s_P_abs)
         indexNow = find(P_over_time_rounded(:,t) == P_current);
         relevant_deltas = P_over_time_rounded(indexNow,t+1) - P_over_time_rounded(indexNow,t);
         P_next = P_current + relevant_deltas;
-        T_Precip_abs(:,i,t) = histcounts(P_next, P_bins, 'Normalization', 'Probability');     
+        T_Precip_abs(:,i,t) = histcounts(P_next, P_bins_abs, 'Normalization', 'Probability');     
     end
 end
 
+%% Get rid of NaN
+
+temp_T_temp = T_Temp_abs;
+ind = find(isnan(T_Temp_abs));
+temp_T_temp(ind) = 0;
+[ind1, ind2, ind3] = ind2sub(size(sum(temp_T_temp)), find(sum(temp_T_temp) == 0));
+index = sub2ind(size(temp_T_temp), ind2, ind2, ind3);
+temp_T_temp(index) = 1;
+if sum(find( abs(sum(temp_T_temp) -1) > .001)) > 0
+    error('invalid T temp')
+end
+T_Temp_abs = temp_T_temp;
+
+
+temp_T_Precip = T_Precip_abs;
+ind = find(isnan(T_Precip_abs));
+temp_T_Precip(ind) = 0;
+[ind1, ind2, ind3] = ind2sub(size(sum(temp_T_Precip)), find(sum(temp_T_Precip) == 0));
+index = sub2ind(size(temp_T_Precip), ind2, ind2, ind3);
+temp_T_Precip(index) = 1;
+if sum(find( abs(sum(temp_T_Precip) -1) > .001)) > 0
+    error('invalid T Precip')
+end
+T_Precip_abs = temp_T_Precip;
 
 

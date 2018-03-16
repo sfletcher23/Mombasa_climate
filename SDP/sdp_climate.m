@@ -22,14 +22,14 @@ runParam.runRunoff = false;
 runParam.runTPts = false;
 runParam.runoffPostProcess = false;
 runParam.forwardSim = false;
-runParam.calcTmat = false;
+runParam.calcTmat = true;
 runParam.calcShortage = true;
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
 climParam = struct;
-climParam.numSamp_delta2abs = 1000;
+climParam.numSamp_delta2abs = 100000;
 climParam.numSampTS = 20;
 climParam.checkBins = false;
 
@@ -109,6 +109,7 @@ end
 for t = 1:N
     index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
+    
     
 %     % Don't prune
 %     index_s_p_time{t} = 1:length(s_P_abs);

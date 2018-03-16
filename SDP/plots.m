@@ -312,7 +312,7 @@ suptitle('Unmet Demand by time')
 set(findall(f,'-property','FontSize'),'FontSize',font_size)
 
 %% testing
-
+if false
 avgMAR = cellfun(@(x) mean(mean(x,2)), runoff);
 avgStdRun = cellfun(@(x) mean(std(x)), runoff);
 
@@ -324,8 +324,17 @@ yield1 = yield(7:25,10,1,1)
 yield2 = yield(7:25,10,1,2)
 unmet1 = unmet_dom(7:25,10,1,1)
 unmet2 = unmet_dom(7:25,10,1,2)
+end
 
-
+%% 
+figure;
+cost_split = [sum(shortageCostTime,2) sum(damCostTime,2)];
+for i = 1:3
+    subplot(3,1,i)
+    boxplot([cost_split(:,:,i)/1E6 sum(totalCostTime(:,:,i),2)/1E6])
+    xlabel(['shortage costs', 'dam costs'])
+    ylim([0 400])
+end
 
 
 
