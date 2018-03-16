@@ -281,6 +281,7 @@ c2 = cdfplot(totalCostLarge/1E6);
 c2.LineWidth = 1.5;
 c3 = cdfplot(totalCostSmall/1E6);
 c3.LineWidth = 1.5;
+legend('Flexible', 'Large', 'Small')
 
 %% Heatmaps Unmet demand by time
 
@@ -291,7 +292,7 @@ clrmp = cbrewer('div','RdYlBu',45);
 colormap(clrmp)
 font_size = 13;
 
-for i = 1:6
+for i = 1
     h(i) = subplot(3,2,i);
     colormap(gca, flipud(clrmp))
     avgUnmetNow = shortageCost(44:58,9:16,1,i);

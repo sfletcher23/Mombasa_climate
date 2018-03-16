@@ -96,7 +96,7 @@ T_abs_max = max(s_T) * N;
 s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
 M_T_abs = length(s_T_abs);
 T_bins = [s_T_abs-climParam.T_delta/2  s_T_abs(end)+climParam.T_delta/2];
-T_Temp_abs = zeros(M_T_abs,M_T_abs,N);
+T_Temp_abs = zeros(M_T_abs,M_T_abs,N);  
 
 P_abs_max = max(s_P) * N;
 s_P_abs = 66:1:97;

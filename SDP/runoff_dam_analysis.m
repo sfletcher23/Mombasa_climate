@@ -1,5 +1,6 @@
 %% Runoff and dam sizing analysis
 
+
 %% Analyze runoff 
 if true
 
@@ -8,8 +9,8 @@ avgStd = cellfun(@(x) mean(std(x,0,2)), runoff);
 
 
 % Boxplots by P
-avgMarNow = avgMAR(:,1:28,5);
-avgStdNow = avgStd(:,1:28,5);
+avgMarNow = avgMAR(:,1:28,1);
+avgStdNow = avgStd(:,1:28,1);
 figure;
 subplot(2,2,1)
 boxplot(avgMarNow, 'Labels',cellstr(string(s_P_abs(1:28))))
@@ -24,8 +25,8 @@ ylabel('Mean Std of Runoff [MCM/y]')
 
 
 % Boxplots by T
-avgMarNow = avgMAR(44:44+51,:,5)';
-avgStdNow = avgStd(44:44+51,:,5)';
+avgMarNow = avgMAR(44:44+51,:,1)';
+avgStdNow = avgStd(44:44+51,:,1)';
 subplot(2,2,2)
 boxplot(avgMarNow, 'Labels',cellstr(string(s_T_abs(44:44+51))))
 title('Distribution of Avg MAR by mean T')
@@ -65,7 +66,7 @@ unmet_ag = cell(M_T_abs, M_P_abs, length(storage), N);
 unmet_dom = cell(M_T_abs, M_P_abs, length(storage), N);
 yield = cell(M_T_abs, M_P_abs, length(storage), N);
 
-for t = 1:N
+for t = 1
     index_s_p_thisPeriod = index_s_p_time{t}; 
     for index_s_p = index_s_p_thisPeriod
 
@@ -130,7 +131,7 @@ clrmp = cbrewer('div','RdYlBu',40);
 colormap(clrmp)
 
 subplot(2,2,1)
-avgMarNow = avgMAR(44:44+51,1:28,5);
+avgMarNow = avgMAR(44:44+51,1:28,1);
 imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)], flipud(avgMarNow))
 colorbar
 xticks(s_P_abs(1): s_P_abs(28))
@@ -143,7 +144,7 @@ title('Mean Runoff')
 
 subplot(2,2,2)
 colormap(gca, flipud(clrmp))
-avgUnmetNow = avgUnmet(44:44+51,1:28,1,5);
+avgUnmetNow = avgUnmet(44:44+51,1:28,1,1);
 imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)], flipud(avgUnmetNow))
 colorbar
 xticks(s_P_abs(1): s_P_abs(28))
@@ -156,7 +157,7 @@ title('Mean Unmet Demand')
 
 subplot(2,2,3)
 colormap(gca, clrmp)
-avgPNow = avgP(1:28,5);
+avgPNow = avgP(1:28,1);
 imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)],avgPNow')
 colorbar
 yticks([])
@@ -167,7 +168,7 @@ title('Mean P')
 
 subplot(2,2,4)
 colormap(gca, flipud(clrmp))
-avgTNow = avgT(44:44+51,5);
+avgTNow = avgT(44:44+51,1);
 imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)],flipud(avgTNow))
 colorbar
 xticks([])
@@ -181,9 +182,9 @@ end
 
 %% Plot shortage 
 
-avgTotalUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,end,5));
-p90TotalUnmet = cellfun(@(x) prctile(sum(x,2),90), unmet_dom(:,:,end,5));
-p10TotalUnmet = cellfun(@(x) prctile(sum(x,2),10), unmet_dom(:,:,end,5));
+avgTotalUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,end,1));
+p90TotalUnmet = cellfun(@(x) prctile(sum(x,2),90), unmet_dom(:,:,end,1));
+p10TotalUnmet = cellfun(@(x) prctile(sum(x,2),10), unmet_dom(:,:,end,1));
 
 % Boxplots by P
 avgUnmetNow = avgTotalUnmet(:,1:28);
@@ -232,8 +233,8 @@ suptitle('Storage 80 MCM, BiDecade 5')
 
 %% Plot yield and shortage costs 
 
-avgYield = cellfun(@(x) mean(prctile(x,10,2)), yield(:,:,end,5));
-avgUnmet = cellfun(@(x) mean(prctile(x,90,2)), unmet_dom(:,:,end,5));
+avgYield = cellfun(@(x) mean(prctile(x,10,2)), yield(:,:,end,1));
+avgUnmet = cellfun(@(x) mean(prctile(x,90,2)), unmet_dom(:,:,end,1));
 
 
 % Boxplots by P
@@ -270,7 +271,7 @@ suptitle('Storage 140 MCM, BiDecade 5')
 
 %% Plot umnmet demand by dam size
 
-avgTotalUnmet = squeeze (cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,5)) );
+avgTotalUnmet = squeeze (cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,1)) );
 
 indP = [1:8:32];
 indT = 44+51;
@@ -302,8 +303,8 @@ suptitle('Unmet demand by dam storage (variation across P)')
 
 %% Heatmaps Unmet demand by storage
 
-% avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
-storage = 60:10:110;
+avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
+
 
 % Heatmap 
 f = figure;
@@ -312,10 +313,10 @@ clrmp = cbrewer('div','RdYlBu',45);
 colormap(clrmp)
 font_size = 13;
 
-for i = 1:6
+for i = 1:2
     h(i) = subplot(3,2,i);
     colormap(gca, flipud(clrmp))
-    avgUnmetNow = avgUnmet(44:44+51,1:28,i,5);
+    avgUnmetNow = avgUnmet(44:44+51,1:28,i,1);
     imagesc([s_P_abs(1) s_P_abs(28)],[s_T_abs(44) s_T_abs(44+51)], flipud(avgUnmetNow))
     c = colorbar;
     caxis([0 300])

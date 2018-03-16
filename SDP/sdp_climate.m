@@ -16,15 +16,15 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = false;
+runParam.runSDP = true;
 runParam.steplen = 20; 
-runParam.runRunoff = true;
-runParam.runTPts = true;
+runParam.runRunoff = false;
+runParam.runTPts = false;
 runParam.runoffPostProcess = false;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
-runParam.calcShortage = false;
-runParam.runoffLoadName = 'runoff_by_state_Mar13_knnboot';
+runParam.calcShortage = true;
+runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [100 130]
+storage = [110 130]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -110,9 +110,9 @@ for t = 1:N
     index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
     
-    % Don't prune
-    index_s_p_time{t} = 1:length(s_P_abs);
-    index_s_t_time{t} = 1:length(s_T_abs);
+%     % Don't prune
+%     index_s_p_time{t} = 1:length(s_P_abs);
+%     index_s_t_time{t} = 1:length(s_T_abs);
 end
 
 
@@ -223,12 +223,12 @@ if runParam.calcShortage
     unmet_dom = nan(M_T_abs, M_P_abs, length(storage), N);
     yield = nan(M_T_abs, M_P_abs, length(storage), N);
 
-    for t = 1:N
+    for t = 1
         index_s_p_thisPeriod = index_s_p_time{t}; 
-        for index_s_p = index_s_p_thisPeriod
+        for index_s_p = 1:length(s_P_abs)
 
             index_s_t_thisPeriod = index_s_t_time{t}; 
-            for index_s_t= index_s_t_thisPeriod
+            for index_s_t= 1:length(s_T_abs)
 
                 for s = 1:length(storage)
 
@@ -244,7 +244,7 @@ if runParam.calcShortage
     end
 
 %     unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
-    shortageCost = (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
+    shortageCost =  (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
@@ -341,7 +341,7 @@ for t = linspace(N,1,N)
                         short_ind = 2; % large capacity
                     end
                     
-                    sCost = shortageCost(index_s_t, index_s_p, short_ind, t)
+                    sCost = shortageCost(index_s_t, index_s_p, short_ind, 1)
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
                     cost = sCost + dCost
@@ -511,7 +511,7 @@ for k = 1:3
             end
 
             % Get shortage and dam costs
-            shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, t);
+            shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, 1);
             ind_dam = find(a == a_exp);
             damCostTime(i,t,k) = dam_cost(ind_dam);
             totalCostTime(i,t,k) = shortageCostTime(i,t,k) + damCostTime(i,t,k);
