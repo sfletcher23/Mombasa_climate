@@ -1,7 +1,6 @@
 %% Combine runoff
 
-filenames = {'runoff_by_state_66270_13_Mar_2018_14_40_10', 'runoff_by_state_66271_13_Mar_2018_14_40_11', ...
-    'runoff_by_state_66272_13_Mar_2018_14_40_07', 'runoff_by_state_66276_13_Mar_2018_14_44_20' };
+filenames = {'runoff_by_state_66414_15_Mar_2018_19_18_19', 'runoff_by_state_66413_15_Mar_2018_19_18_21'};
 
 runoff_post = cell(M_T_abs, M_P_abs, N);
 T_ts_post = cell(M_T_abs, N);

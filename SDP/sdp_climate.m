@@ -20,7 +20,7 @@ runParam.runSDP = false;
 runParam.steplen = 20; 
 runParam.runRunoff = true;
 runParam.runTPts = true;
-runParam.runoffPostProcess = true;
+runParam.runoffPostProcess = false;
 runParam.forwardSim = false;
 runParam.calcTmat = false;
 runParam.calcShortage = false;
@@ -30,7 +30,7 @@ runParam.saveOn = true;
 
 climParam = struct;
 climParam.numSamp_delta2abs = 1000;
-climParam.numSampTS = 2;
+climParam.numSampTS = 20;
 climParam.checkBins = false;
 
 costParam = struct;
@@ -179,10 +179,6 @@ for t = 1
     end
 end
 
-
-for t = 1:N
-    runoff(:, :, t) = runoff(:,:,1);
-end
 
 savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
 save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
