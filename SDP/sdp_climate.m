@@ -89,7 +89,9 @@ dam_cost = zeros(1,length(a_exp));
 dam_cost(2) = storage2damcost(storage(1),0);
 dam_cost(3) = storage2damcost(storage(2),0);
 [dam_cost(4), dam_cost(5)] = storage2damcost(storage(1), storage(2));
+dam_cost
 (dam_cost(3) - dam_cost(2))/dam_cost(2)
+dam_cost(4) + dam_cost(5)
 
   
 %% Calculate climate transition matrix 
