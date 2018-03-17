@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [110 130]
+storage = [110 140]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
@@ -90,8 +90,14 @@ dam_cost(2) = storage2damcost(storage(1),0);
 dam_cost(3) = storage2damcost(storage(2),0);
 [dam_cost(4), dam_cost(5)] = storage2damcost(storage(1), storage(2));
 dam_cost
-(dam_cost(3) - dam_cost(2))/dam_cost(2)
-dam_cost(4) + dam_cost(5)
+percsmalltolarge = (dam_cost(3) - dam_cost(2))/dam_cost(2);
+flexexp = dam_cost(4) + dam_cost(5);
+diffsmalltolarge = dam_cost(3) - dam_cost(2);
+shortagediff = (dam_cost(3) - dam_cost(2))/ (costParam.domShortage * 1e6);
+
+fprintf('Large dam is %.1f MCM shortage \n small dam is %.1f MCM shoratge \n exp cost is %.1f MCM of shorage', ...
+    [dam_cost(3) /(costParam.domShortage * 1e6) dam_cost(2) /(costParam.domShortage * 1e6) ...
+    dam_cost(5) /(costParam.domShortage * 1e6)])
 
   
 %% Calculate climate transition matrix 
@@ -441,16 +447,16 @@ if runParam.forwardSim
 R = 100;
 N = runParam.N;
 
-T_state = zeros(R,N,3);
-P_state = zeros(R,N,3);
+T_state = zeros(R,N);
+P_state = zeros(R,N);
 C_state = zeros(R,N,3);
 action = zeros(R,N,3);
 damCostTime = zeros(R,N,3);
 shortageCostTime = zeros(R,N,3);
 totalCostTime = zeros(R,N,3); 
 
-T_state(:,1,:) = climParam.T0_abs;
-P_state(:,1,:) = climParam.P0_abs;
+T_state(:,1) = climParam.T0_abs;
+P_state(:,1) = 80;
 C_state(:,1,1) = 3;
 C_state(:,1,2) = 2;
 C_state(:,1,3) = 1;
@@ -460,8 +466,8 @@ for k = 1:3
         for t = 1:N
 
             % Choose best action given current state
-            index_t = find(T_state(i,t,k) == s_T_abs);
-            index_p = find(P_state(i,t,k) == s_P_abs);
+            index_t = find(T_state(i,t) == s_T_abs);
+            index_p = find(P_state(i,t) == s_P_abs);
             index_c = find(C_state(i,t,k) == s_C);
             
             % In flex case follow exp policy, otherwise restrict to large or
@@ -566,9 +572,11 @@ for k = 1:3
                     if (T_current(ind_s1, ind_s2, ind_s3) < margin)
                         error('Invalid sample from T_current')
                     end
-
-                T_state(i,t+1,k) = s_T_abs(ind_s1);
-                P_state(i,t+1,k) = s_P_abs(ind_s2);
+                
+                if k == 1
+                    T_state(i,t+1,k) = s_T_abs(ind_s1);
+                    P_state(i,t+1,k) = s_P_abs(ind_s2);
+                end
                 C_state(i,t+1,k) = s_C(ind_s3);
 
             end

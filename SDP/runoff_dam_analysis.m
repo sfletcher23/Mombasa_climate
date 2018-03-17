@@ -60,7 +60,7 @@ end
 
 %% Analyze yield and shortage costs
 
-storage = [105 130];
+storage = [100 110 120 130 140];
 
 unmet_ag = cell(M_T_abs, M_P_abs, length(storage), N);
 unmet_dom = cell(M_T_abs, M_P_abs, length(storage), N);
@@ -78,8 +78,10 @@ for t = 1
                 [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
                     runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
                 yield{index_s_t, index_s_p, s, t} = yield_mdl;
+                unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
                 unmet_ag{index_s_t, index_s_p, s, t} = unmet_ag_mdl;
-                unmet_dom{index_s_t, index_s_p, s, t} = unmet_dom_mdl;
+                unmet_dom{index_s_t, index_s_p, s, t} = unmet_dom_90;
+                
 %                 sum(unmet_dom_mdl,2)
 %                 mean(sum(unmet_dom_mdl,2))
 %                 storage(s)
@@ -228,7 +230,7 @@ title('p90 UnmetDemand by mean T')
 xlabel('Mean T [degrees C]')
 ylabel('Unmet demand [MCM]')
 
-suptitle('Storage 80 MCM, BiDecade 5')
+suptitle('Storage  MCM, BiDecade 5')
 
 
 %% Plot yield and shortage costs 
@@ -309,11 +311,11 @@ avgUnmet = cellfun(@(x) mean(sum(x,2)), unmet_dom(:,:,:,:));
 % Heatmap 
 f = figure;
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
-clrmp = cbrewer('div','RdYlBu',45);
+clrmp = cbrewer('div','RdYlBu',15);
 colormap(clrmp)
 font_size = 13;
 
-for i = 1:2
+for i = 1:6
     h(i) = subplot(3,2,i);
     colormap(gca, flipud(clrmp))
     avgUnmetNow = avgUnmet(44:44+51,1:28,i,1);
