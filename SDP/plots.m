@@ -289,6 +289,7 @@ totalCostLarge = sum(totalCostTime(:,:,2),2);
 totalCostSmall = sum(totalCostTime(:,:,3),2);
 
 figure;
+subplot(3,1,1)
 hold on
 c1 = cdfplot(totalCostFlex/1E6);
 c1.LineWidth = 1.5;
@@ -297,6 +298,28 @@ c2.LineWidth = 1.5;
 c3 = cdfplot(totalCostSmall/1E6);
 c3.LineWidth = 1.5;
 legend('Flexible', 'Large', 'Small')
+title('total cost')
+
+subplot(3,1,2)
+hold on
+c1 = cdfplot(sum(damCostTime(:,:,1),2)/1E6);
+c1.LineWidth = 1.5;
+c2 = cdfplot(sum(damCostTime(:,:,2),2)/1E6);
+c2.LineWidth = 1.5;
+c3 = cdfplot(sum(damCostTime(:,:,3),2)/1E6);
+c3.LineWidth = 1.5;
+title('dam cost')
+
+subplot(3,1,3)
+hold on
+c1 = cdfplot(sum(shortageCostTime(:,:,1),2)/1E6);
+c1.LineWidth = 1.5;
+c2 = cdfplot(sum(shortageCostTime(:,:,2),2)/1E6);
+c2.LineWidth = 1.5;
+c3 = cdfplot(sum(shortageCostTime(:,:,3),2)/1E6);
+c3.LineWidth = 1.5;
+title('shortage cost')
+
 
 %% States over time
 figure;

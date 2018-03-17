@@ -247,6 +247,7 @@ if runParam.calcShortage
                     unmet_ag(index_s_t, index_s_p, s, t) = mean(sum(unmet_ag_mdl,2));
                     unmet_dom(index_s_t, index_s_p, s, t) = mean(sum(unmet_dom_90,2));
                     yield(index_s_t, index_s_p, s, t) = mean(sum(yield_mdl,2));
+                    
                 end
             end
         end
@@ -351,6 +352,10 @@ for t = linspace(N,1,N)
                     end
                     
                     sCost = shortageCost(index_s_t, index_s_p, short_ind, 1)
+                    if t == 1 
+                        sCost = 0;  % This is upfront building period
+                    end
+                  
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
                     cost = sCost + dCost
@@ -456,7 +461,7 @@ shortageCostTime = zeros(R,N,3);
 totalCostTime = zeros(R,N,3); 
 
 T_state(:,1) = climParam.T0_abs;
-P_state(:,1) = 80;
+P_state(:,1) = 78;
 C_state(:,1,1) = 3;
 C_state(:,1,2) = 2;
 C_state(:,1,3) = 1;
