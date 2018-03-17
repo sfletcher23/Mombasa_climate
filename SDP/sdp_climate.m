@@ -35,7 +35,7 @@ climParam.checkBins = false;
 
 costParam = struct;
 costParam.yieldprctl = 50;
-costParam.domShortage = 15;
+costParam.domShortage = 5;
 costParam.agShortage = 0;
 
 
@@ -78,7 +78,7 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [110 140]
+storage = [60 90]
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods

@@ -60,7 +60,7 @@ end
 
 %% Analyze yield and shortage costs
 
-storage = [100 110 120 130 140];
+storage = [50 60 70 80 90 100];
 
 unmet_ag = cell(M_T_abs, M_P_abs, length(storage), N);
 unmet_dom = cell(M_T_abs, M_P_abs, length(storage), N);
