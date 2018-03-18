@@ -21,7 +21,7 @@ ylabel('Mean MAR [MCM/y]')
 subplot(3,1,2)
 boxplot(avgStdNow ./ avgMarNow, 'Labels',cellstr(string(s_P_abs)))
 title('Distribution of Average Coefficient of Variation by mean P')
-xlabel('Mean P [mm/m]')
+xlabel('Mean P [mm/m]') 
 ylabel('Mean Std of Runoff [MCM/y]')
 % subplot(3,1,3)
 % boxplot(avgShortNow/1E6, 'Labels',cellstr(string(s_P_abs(1:28))))
@@ -132,6 +132,8 @@ title('Initial decision')
 
 %% Version 2: Expansion policy for flexible dam
 
+if true
+
 figure;
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
 clrmp = cbrewer('qual','Set3',6);
@@ -171,6 +173,8 @@ ylim([s_T_abs(1) s_T_abs(95)+.2])
 
 title('Expansion Policy for Flexible Dam')
 
+end
+
 %% Heatmap for shortage cost
 if false
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
@@ -201,22 +205,6 @@ for i = 2:5
     title(decade{i})
 end
 
-end
-
-%% disaster ugh
-
-if false
-figure
-[x,y,z] = meshgrid(s_P_abs(vldPInd{i}(1)):1:s_P_abs(vldPInd{i}(end)), ...
-    s_T_abs(vldTInd{i}(1)) :.05: s_T_abs(vldTInd{i}(end)), 2:1:5);
-x = s_P_abs(vldPInd{i}(1)):1: s_P_abs(vldPInd{i}(end));
-y = s_T_abs(vldTInd{i}(1)): .05 :s_T_abs(vldTInd{i}(end));
-z = [2 2 ];
-
-x = [s_P_abs(vldPInd{i}(1))-.5 s_P_abs(vldPInd{i}(end))+.5 s_P_abs(vldPInd{i}(end))+.5  s_P_abs(vldPInd{i}(1))-.5]; 
-y = [s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(1))-0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2 s_T_abs(vldTInd{i}(end))+0.0500/2];
-z = [2 2 2 2 ];
-fill3(x,y,z, 'k')
 end
 
 
@@ -282,6 +270,48 @@ legend('Build',  'Never build')
 legend('Location', 'NW')
 title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
 
+%% Histogram of initial decision
+
+
+indExp = action == 4;
+expOverTime = zeros(size(action(:,:,1)));
+expOverTime(indExp) = 1;
+[rExp,cExp] = find(expOverTime(:,:,1));
+expTimeLarge = accumarray(rExp,cExp,[size(expOverTime(:,:,1),1),1],@min,6);
+indNever = find(sum(expOverTime(:,:,1),2) == 0 );
+countNever = numel(indNever);
+
+figure;
+% plot expansion policy
+subplot(1,2,2)
+yLarge = histc(expTimeLarge, [2:5]);
+bar(2:5, [yLarge ], 'stacked')
+hold on 
+bar(6, countNever, 'k')
+labels = cell(1,5);
+labels(1:4) = decade(2:5);
+labels{5} = 'Never';
+ax = gca;
+ax.XTick = 2:6;
+ax.XTickLabel = labels;
+xlabel('Expansion Time')
+ylabel(strcat('Frequency in', num2str(R),' simulations'))
+legend('Build',  'Never build')
+legend('Location', 'NW')
+title(strcat('Expansion decision for flexible dam'))
+ylim([0 R])
+
+subplot(1,2,1)
+h = histogram(action(:,1,4),[.5 1.5 2.5 3.5])
+h.FaceColor = 'b';
+ax = gca
+ax.XTick = [1 2 3];
+xticklabels({'Small', 'Large', 'Flexible'})
+title('Upfront Dam Choice')
+ylim([0 R])
+ylabel(strcat('Frequency in', num2str(R),' simulations'))
+
+
 %% CDF of flex vs static
 
 totalCostFlex = sum(totalCostTime(:,:,1),2);
@@ -346,7 +376,7 @@ title('small')
 
 
 %% Heatmaps Unmet demand by time
-
+if false
 % Heatmap 
 f = figure;
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
@@ -372,7 +402,7 @@ for i = 1
 end
 suptitle('Unmet Demand by time')
 set(findall(f,'-property','FontSize'),'FontSize',font_size)
-
+end
 %% testing
 if false
 avgMAR = cellfun(@(x) mean(mean(x,2)), runoff);
@@ -388,7 +418,9 @@ unmet1 = unmet_dom(7:25,10,1,1)
 unmet2 = unmet_dom(7:25,10,1,2)
 end
 
-%% 
+%%  Boxplots of costs: dam, shortage, total
+if false
+
 figure;
 cost_split = [sum(shortageCostTime,2) sum(damCostTime,2)];
 for i = 1:3
@@ -398,5 +430,32 @@ for i = 1:3
     ylim([0 400])
 end
 
+end
+
+%% Plot time series for single run
+
+ind = randi(R,1);
+ind = 14
+figure;
+for k = 1:3
+    subplot(3,3,k)
+    bar([damCostTime(ind,:,k)/1E6; shortageCostTime(ind,:,k)/1E6]', 'stacked')
+    ylim([0 100])
+    subplot(3,3,k+3)
+    yyaxis left
+    plot(P_state(ind,:)')
+    ylim([s_P_abs(1) s_P_abs(end)])
+    ylabel('Mean P [mm/m]')
+    yyaxis right
+    plot(T_state(ind,:)')
+    ylim([s_T_abs(1) s_T_abs(end)])
+    ylabel('Mean T [degrees C]')
+    subplot(3,3,k+6)
+    yyaxis left
+    scatter(1:5,action(ind,:,k)')
+    ylim([0 4])
+    yyaxis right
+    plot(C_state(ind,:,k)')
+end
 
 

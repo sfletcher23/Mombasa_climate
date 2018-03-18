@@ -16,14 +16,14 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = true;
+runParam.runSDP = false;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
 runParam.runTPts = false;
 runParam.runoffPostProcess = false;
-runParam.forwardSim = false;
+runParam.forwardSim = true;
 runParam.calcTmat = true;
-runParam.calcShortage = true;
+runParam.calcShortage = false;
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -35,7 +35,7 @@ climParam.checkBins = false;
 
 costParam = struct;
 costParam.yieldprctl = 50;
-costParam.domShortage = 5;
+costParam.domShortage = 15;
 costParam.agShortage = 0;
 
 
@@ -49,7 +49,7 @@ climParam.P_max = .3;
 climParam.P_delta = .02; %mm/m
 s_P = climParam.P_min : climParam.P_delta : climParam.P_max;
 climParam.P0 = s_P(15);
-climParam.P0_abs = 75;
+climParam.P0_abs = 77;
 M_P = length(s_P);
 
 climParam.T_min = 0;
@@ -454,19 +454,33 @@ N = runParam.N;
 
 T_state = zeros(R,N);
 P_state = zeros(R,N);
-C_state = zeros(R,N,3);
-action = zeros(R,N,3);
-damCostTime = zeros(R,N,3);
-shortageCostTime = zeros(R,N,3);
-totalCostTime = zeros(R,N,3); 
+C_state = zeros(R,N,4);
+action = zeros(R,N,4);
+damCostTime = zeros(R,N,4);
+shortageCostTime = zeros(R,N,4);
+totalCostTime = zeros(R,N,4); 
 
-T_state(:,1) = climParam.T0_abs;
-P_state(:,1) = 78;
-C_state(:,1,1) = 3;
-C_state(:,1,2) = 2;
-C_state(:,1,3) = 1;
+load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat', 'MUT', 'MUP')
+indT0 = find(s_T_abs == climParam.T0_abs);
+indP0 = find(s_P_abs == climParam.P0_abs);
+T0samp = MUT(:,1,indT0);
+P0samp = MUP(:,1,indP0);
+T0samp = climParam.T0_abs + T0samp;
+P0samp = exp(P0samp)* climParam.P0_abs;
+indsamp = randi(1000,R,1);
+T0samp = T0samp(indsamp);
+P0samp = P0samp(indsamp);
+T0samp = round2x(T0samp, s_T_abs);
+P0samp = round2x(P0samp, s_P_abs);
 
-for k = 1:3
+T_state(:,1) = T0samp;
+P_state(:,1) = P0samp;
+C_state(:,1,1) = 3; % Always flex
+C_state(:,1,2) = 2; % Always large
+C_state(:,1,3) = 1; % Always small
+C_state(:,1,4) = 1; % Choose based on policy
+
+for k = 1:4
     for i = 1:R
         for t = 1:N
 
@@ -485,6 +499,8 @@ for k = 1:3
                         action(i,t,k) = 2;
                     case 3
                         action(i,t,k) = 1;
+                    case 4
+                        action(i,t,k) =  X(index_t, index_p, index_c, t);
                 end
             else 
                 switch k
@@ -494,6 +510,8 @@ for k = 1:3
                         action(i,t,k) = 0;
                     case 3
                         action(i,t,k) = 0;
+                    case 4
+                        action(i,t,k) =  X(index_t, index_p, index_c, t);
                 end
             end
             
@@ -526,6 +544,9 @@ for k = 1:3
 
             % Get shortage and dam costs
             shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, 1);
+            if t == 1 
+                shortageCostTime(i,t,k) = 0;  % This is upfront building period
+            end
             ind_dam = find(a == a_exp);
             damCostTime(i,t,k) = dam_cost(ind_dam);
             totalCostTime(i,t,k) = shortageCostTime(i,t,k) + damCostTime(i,t,k);
