@@ -57,6 +57,7 @@ end
 
 %% Expansion policy for flexible dam
 
+decadeline = {'2001\newline-2020', '2021\newline-2040', '2041\newline-2060', '2061\newline-2080', '2081\newline-2100'};
 decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 % vldTInd = cell(1,5);
 % vldPInd = cell(1,5);
@@ -246,7 +247,7 @@ ax.YDir = 'normal';
 
 %% Histogram of expansion time
 
-indExp = action == 4;
+indExp = action(:,:,1) == 4;
 expOverTime = zeros(size(action(:,:,1)));
 expOverTime(indExp) = 1;
 [rExp,cExp] = find(expOverTime(:,:,1));
@@ -259,7 +260,7 @@ bar(2:5, [yLarge ], 'stacked')
 hold on 
 bar(6, countNever, 'k')
 labels = cell(1,5);
-labels(1:4) = decade(2:5);
+labels(1:4) = decadeline(2:5);
 labels{5} = 'Never';
 ax = gca;
 ax.XTick = 2:6;
@@ -270,47 +271,49 @@ legend('Build',  'Never build')
 legend('Location', 'NW')
 title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
 
-%% Histogram of initial decision
+%% Histogram of initial decision and exp policy
 
+grnclr = cbrewer('seq', 'Greens', 6);
 
-indExp = action == 4;
-expOverTime = zeros(size(action(:,:,1)));
-expOverTime(indExp) = 1;
-[rExp,cExp] = find(expOverTime(:,:,1));
-expTimeLarge = accumarray(rExp,cExp,[size(expOverTime(:,:,1),1),1],@min,6);
-indNever = find(sum(expOverTime(:,:,1),2) == 0 );
-countNever = numel(indNever);
-
-figure;
+f = figure;
 % plot expansion policy
-subplot(1,2,2)
+subplot(1,9,5:9)
 yLarge = histc(expTimeLarge, [2:5]);
-bar(2:5, [yLarge ], 'stacked')
+bar(2:5, [yLarge ], 'stacked', 'b')
 hold on 
 bar(6, countNever, 'k')
 labels = cell(1,5);
-labels(1:4) = decade(2:5);
+labels(1:4) = decadeline(2:5);
 labels{5} = 'Never';
 ax = gca;
+xlim([1.2 6.7])
 ax.XTick = 2:6;
 ax.XTickLabel = labels;
-xlabel('Expansion Time')
+% xlabel('Expansion Time')
 ylabel(strcat('Frequency in', num2str(R),' simulations'))
 legend('Build',  'Never build')
 legend('Location', 'NW')
+legend('boxoff')
 title(strcat('Expansion decision for flexible dam'))
 ylim([0 R])
 
-subplot(1,2,1)
-h = histogram(action(:,1,4),[.5 1.5 2.5 3.5])
-h.FaceColor = 'b';
+subplot(1,9,1:3)
+h = histc(action(:,1,4),[.5 1.5 2.5 3.5]);
+b = bar(1:3, h(1:3));
+b.FaceColor = grnclr(6,:);
 ax = gca
 ax.XTick = [1 2 3];
 xticklabels({'Small', 'Large', 'Flexible'})
-title('Upfront Dam Choice')
+title('Upfront dam choice')
 ylim([0 R])
 ylabel(strcat('Frequency in', num2str(R),' simulations'))
 
+set(findall(f,'-property','FontSize'),'FontSize',13)
+
+labels = {'line1 line2','line1 line2','line1 line2'};
+labels = cellfun(@(x) strrep(x,' ','\newline'), labels,'UniformOutput',false);
+a = gca;
+a.XTickLabel = labels;
 
 %% CDF of flex vs static
 
@@ -321,34 +324,55 @@ totalCostSmall = sum(totalCostTime(:,:,3),2);
 figure;
 subplot(3,1,1)
 hold on
-c1 = cdfplot(totalCostFlex/1E6);
-c1.LineWidth = 1.5;
 c2 = cdfplot(totalCostLarge/1E6);
 c2.LineWidth = 1.5;
 c3 = cdfplot(totalCostSmall/1E6);
 c3.LineWidth = 1.5;
-legend('Flexible', 'Large', 'Small')
-title('total cost')
+c1 = cdfplot(totalCostFlex/1E6);
+c1.LineWidth = 1.5;
+legend( 'Large', 'Small','Flexible')
+legend('boxoff')
+title('CDF of Total Cost')
+xlabel('Cost [M$]')
 
 subplot(3,1,2)
 hold on
-c1 = cdfplot(sum(damCostTime(:,:,1),2)/1E6);
-c1.LineWidth = 1.5;
 c2 = cdfplot(sum(damCostTime(:,:,2),2)/1E6);
 c2.LineWidth = 1.5;
 c3 = cdfplot(sum(damCostTime(:,:,3),2)/1E6);
 c3.LineWidth = 1.5;
-title('dam cost')
+c1 = cdfplot(sum(damCostTime(:,:,1),2)/1E6);
+c1.LineWidth = 1.5;
+title('CDF of Dam Cost')
+xlabel('Cost [M$]')
 
 subplot(3,1,3)
 hold on
-c1 = cdfplot(sum(shortageCostTime(:,:,1),2)/1E6);
-c1.LineWidth = 1.5;
 c2 = cdfplot(sum(shortageCostTime(:,:,2),2)/1E6);
 c2.LineWidth = 1.5;
 c3 = cdfplot(sum(shortageCostTime(:,:,3),2)/1E6);
 c3.LineWidth = 1.5;
-title('shortage cost')
+c1 = cdfplot(sum(shortageCostTime(:,:,1),2)/1E6);
+c1.LineWidth = 1.5;
+title('CDF of Shortage Cost')
+xlabel('Cost [M$]')
+
+mean(totalCostFlex)
+mean(totalCostLarge)
+mean(totalCostSmall)
+
+figure;
+hold on
+c2 = cdfplot(totalCostLarge/1E6);
+c2.LineWidth = 1.5;
+c3 = cdfplot(totalCostSmall/1E6);
+c3.LineWidth = 1.5;
+c1 = cdfplot(totalCostFlex/1E6);
+c1.LineWidth = 1.5;
+legend( 'Large', 'Small','Flexible')
+legend('boxoff')
+title('CDF of Total Cost')
+xlabel('Cost [M$]')
 
 
 %% States over time
@@ -373,6 +397,60 @@ title('large')
 subplot(3,1,3)
 plot(shortageCostTime(:,:,3)')
 title('small')
+
+%% Heatmaps: unmet demand for small and large storage
+
+avgUnmetSmall = unmet_dom(:,:,1,1);
+avgUnmetLarge = unmet_dom(:,:,2,1);
+
+% Expected future temp and precip
+expTemp = mean(T_state(:,end));
+expPrecip = mean(P_state(:,end));
+
+% Heatmap 
+figure;
+clrmp = cbrewer('div','RdYlBu',12);
+colormap(clrmp)
+
+subplot(2,1,1)
+ax = gca;
+colormap(ax, flipud(clrmp))
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetSmall, [0 55])
+ax.YDir = 'normal'
+c = colorbar;
+c.Label.String = 'MCM';
+xticks(s_P_abs(1): s_P_abs(end))
+yticks(s_T_abs(1):1: s_T_abs(end))
+xticklabels(s_P_abs)
+yticklabels(s_T_abs(1):.5:s_T_abs(end))
+xlim([s_P_abs(1) 90])
+xlabel('P [mm/m]')
+ylabel('T [degrees C]')
+title('Mean 20-year Unmet Demand: Small Dam')
+hold on
+scatter(climParam.P0_abs, climParam.T0_abs, 'o', 'g', 'SizeData', 40, 'MarkerFaceColor', 'g')
+scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
+
+subplot(2,1,2)
+ax = gca;
+colormap(ax, flipud(clrmp))
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetLarge, [0 55])
+ax.YDir = 'normal';
+c = colorbar;
+c.Label.String = 'MCM';
+xticks(s_P_abs(1): s_P_abs(end))
+yticks(s_T_abs(1):1: s_T_abs(end))
+xlim([s_P_abs(1) 90])
+xticklabels(s_P_abs)
+yticklabels(s_T_abs(1):.5:s_T_abs(end))
+xlabel('P [mm/m]')
+ylabel('T [degrees C]')
+title('Mean 20-year Unmet Demand: Large Dam')
+hold on
+scatter(climParam.P0_abs, climParam.T0_abs, 'o', 'g', 'SizeData', 40, 'MarkerFaceColor', 'g')
+scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
+legend('Current climate', 'Expected future climate')
+
 
 
 %% Heatmaps Unmet demand by time

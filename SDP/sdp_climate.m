@@ -37,6 +37,7 @@ costParam = struct;
 costParam.yieldprctl = 50;
 costParam.domShortage = 15;
 costParam.agShortage = 0;
+costParam.discountrate = .05;
 
 
 %% State and Action Definitions 
@@ -358,7 +359,7 @@ for t = linspace(N,1,N)
                   
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
-                    cost = sCost + dCost
+                    cost = (sCost + dCost) * (1+costParam.discountrate)^t;
                                       
                    
                     % Calculate transition matrix
