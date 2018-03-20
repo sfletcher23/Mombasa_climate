@@ -25,7 +25,7 @@ runParam.forwardSim = true;
 runParam.calcTmat = true;
 runParam.calcShortage = true;
 runParam.desalOn = true;
-runParam.desalCapacity = 50;
+runParam.desalCapacity = [60 80];
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -81,26 +81,40 @@ T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [60 90]
+storage = [80 120];
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
-a_exp = 0:4; % 0 - do nothing; 1 - build small dam; 2 - build large dam; 3 - build flex dam
-            % 4 - expand flex dam
+a_exp = 0:4; % 0 - do nothing; 1 - build small; 2 - build large; 3 - build flex
+            % 4 - expand flex 
+            
+infra_cost = zeros(1,length(a_exp));
+opex_cost = zeros(1,length(a_exp));
+if ~runParam.desalOn
+    
+    % dam costs
+    infra_cost(2) = storage2damcost(storage(1),0);
+    infra_cost(3) = storage2damcost(storage(2),0);
+    [infra_cost(4), infra_cost(5)] = storage2damcost(storage(1), storage(2));
+    percsmalltolarge = (infra_cost(3) - infra_cost(2))/infra_cost(2);
+    flexexp = infra_cost(4) + infra_cost(5);
+    diffsmalltolarge = infra_cost(3) - infra_cost(2);
+    shortagediff = (infra_cost(3) - infra_cost(2))/ (costParam.domShortage * 1e6);
+    
+else
+    % desal capital costs
+    [infra_cost(2),~,opex_cost(2)] = capacity2desalcost(runParam.desalCapacity(1),0); % small
+    [infra_cost(3),~,opex_cost(3)] = capacity2desalcost(runParam.desalCapacity(2),0); % large
+    [infra_cost(4), infra_cost(5), opex_cost(4)] = capacity2desalcost(runParam.desalCapacity(1), runParam.desalCapacity(2));  
+    opex_cost(5) = opex_cost(4);
 
-dam_cost = zeros(1,length(a_exp));
-dam_cost(2) = storage2damcost(storage(1),0);
-dam_cost(3) = storage2damcost(storage(2),0);
-[dam_cost(4), dam_cost(5)] = storage2damcost(storage(1), storage(2));
-dam_cost
-percsmalltolarge = (dam_cost(3) - dam_cost(2))/dam_cost(2);
-flexexp = dam_cost(4) + dam_cost(5);
-diffsmalltolarge = dam_cost(3) - dam_cost(2);
-shortagediff = (dam_cost(3) - dam_cost(2))/ (costParam.domShortage * 1e6);
+end
+infra_cost
+opex_cost
 
-fprintf('Large dam is %.1f MCM shortage \n small dam is %.1f MCM shoratge \n exp cost is %.1f MCM of shorage \n', ...
-    [dam_cost(3) /(costParam.domShortage * 1e6) dam_cost(2) /(costParam.domShortage * 1e6) ...
-    dam_cost(5) /(costParam.domShortage * 1e6)])
+fprintf('Large is %.1f MCM shortage \n small is %.1f MCM shoratge \n exp cost is %.1f MCM of shorage \n', ...
+    [infra_cost(3) /(costParam.domShortage * 1e6) infra_cost(2) /(costParam.domShortage * 1e6) ...
+    infra_cost(5) /(costParam.domShortage * 1e6)])
 
   
 %% Calculate climate transition matrix 
@@ -234,6 +248,7 @@ if runParam.calcShortage
     unmet_ag = nan(M_T_abs, M_P_abs, length(storage), N);
     unmet_dom = nan(M_T_abs, M_P_abs, length(storage), N);
     yield = nan(M_T_abs, M_P_abs, length(storage), N);
+    desal = cell(M_T_abs, M_P_abs, length(storage));
 
     for t = 1
         index_s_p_thisPeriod = index_s_p_time{t}; 
@@ -242,25 +257,40 @@ if runParam.calcShortage
             index_s_t_thisPeriod = index_s_t_time{t}; 
             for index_s_t= 1:length(s_T_abs)
 
-                for s = 1:length(storage)
+                for s = 1:2
 
-                    [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
-                        runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
+                    if ~runParam.desalOn
+                        % vary storage
+                        [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply, desalfill]  = ...
+                            runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), 0, runParam, climParam);
+                    else
+                        % large storage, vary desal
+                        [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply, desalfill]  = ...
+                            runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(2), runParam.desalCapacity(s), runParam, climParam);
+                    end
+                    
                     unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
                     unmet_ag(index_s_t, index_s_p, s, t) = mean(sum(unmet_ag_mdl,2));
                     unmet_dom(index_s_t, index_s_p, s, t) = mean(sum(unmet_dom_90,2));
                     yield(index_s_t, index_s_p, s, t) = mean(sum(yield_mdl,2));
+                    desal{index_s_t, index_s_p, s} = desalsupply + desalfill;
                     
                 end
             end
         end
     end
 
-%     unmet_dom_90 = max(unmet_dom - cmpd2mcmpy(186000)*.1, 0);
     shortageCost =  (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
+    
+    desal_opex = nan(M_T_abs, M_P_abs, length(storage), N);
+    for t = 1:N
+        discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:t*runParam.steplen), 100, 1);
+        desal_opex(:,:,:,t) = cellfun(@(x) mean(opex_cost * x ./ discountfactor, 2), desal);
+    end
+    
 
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
-    save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom')
+    save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom', 'desal_opex')
 
 else
 %     load(runParam.shortageLoadName);
@@ -360,8 +390,10 @@ for t = linspace(N,1,N)
                     end
                   
                     ind_dam = find(a == a_exp);
-                    dCost = dam_cost(ind_dam)
+                    dCost = infra_cost(ind_dam);
                     cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
+                    opex = opex_cost(index_s_t, index_s_p, short_ind, t);
+                    cost = cost + opex;
                                       
                    
                     % Calculate transition matrix
@@ -461,6 +493,7 @@ C_state = zeros(R,N,4);
 action = zeros(R,N,4);
 damCostTime = zeros(R,N,4);
 shortageCostTime = zeros(R,N,4);
+opexCostTime = zeros(R,N,4);
 totalCostTime = zeros(R,N,4); 
 
 load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat', 'MUT', 'MUP')
@@ -551,9 +584,15 @@ for k = 1:4
                 shortageCostTime(i,t,k) = 0;  % This is upfront building period
             end
             ind_dam = find(a == a_exp);
-            damCostTime(i,t,k) = dam_cost(ind_dam);
+            damCostTime(i,t,k) = infra_cost(ind_dam);
+            opexCostTime(i,t,k) = opex_cost(index_t, index_p, short_ind, t);
             totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
+            totalCostTime(i,t,k) = totalCostTime(i,t,k) + opexCostTime(i,t,k);
+            
 
+                    cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
+                    opex = opex_cost(index_s_t, index_s_p, short_ind, 1);
+                    cost = cost + opex;
 
             % Simulate transition to next state
             % Capacity transmat vector

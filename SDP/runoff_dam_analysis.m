@@ -109,7 +109,7 @@ storage = [80 120];
 figure;
 for s = 1:length(storage)
     [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply]  = ...
-        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage(s), runParam, climParam);
+        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage(s),0, runParam, climParam);
     subplot(length(storage), 1, s)
     b = bar([yield_mdl(1,:)' desalsupply(1,:)'], 'stacked');
     b(1).FaceColor = [.9 .9 .9];
@@ -137,9 +137,8 @@ desalCapacity = [60 80];
 
 figure;
 for s = 1:2
-    runParam.desalCapacity = desalCapacity(s);
     [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply]  = ...
-        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage, runParam, climParam);
+        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage, desalCapacity(s), runParam, climParam);
     subplot(2, 1, s)
     b = bar([yield_mdl(1,:)' desalsupply(1,:)'], 'stacked');
     b(1).FaceColor = [.9 .9 .9];

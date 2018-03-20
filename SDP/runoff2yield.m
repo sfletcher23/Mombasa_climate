@@ -1,4 +1,4 @@
-function  [yield, K, demand, unmet_dom, unmet_ag, desalsupply]  = runoff2yield(inflow, T, P, storage, runParam, climParam)
+function  [yield, K, demand, unmet_dom, unmet_ag, desalsupply, desalfill]  = runoff2yield(inflow, T, P, storage, capacity, runParam, climParam)
 
 % Inflow is a monthly time series in MCM/y starting in January
 % Storage is a scalar 
@@ -52,7 +52,7 @@ end
 else
 
 desalfill = zeros(numRuns,numYears*12);
-desalthreshold = runParam.desalCapacity;
+desalthreshold = capacity;
 
     for t = 1:numYears*12
         if t == 1
@@ -75,17 +75,17 @@ desalthreshold = runParam.desalCapacity;
         K(indGreat,t) = 0;
         
         % If demand was not fully met by inflows and storage, desalinate as much as needed and can
-        desalsupply(:,t) = min( max(demand(:,t) - release(:,t),0), runParam.desalCapacity);
+        desalsupply(:,t) = min( max(demand(:,t) - release(:,t),0), capacity);
         
         % If storage is less than half capacity and desal capacity remains, fill to half or as much as can
-        remainingcapacity = runParam.desalCapacity - desalsupply(:,t);
+        remainingcapacity = capacity - desalsupply(:,t);
         desalfill(:,t) = min(remainingcapacity, max(storage/2 - K(:,t), 0));
         K(:,t) = K(:,t) + desalfill(:,t);
     end
     
 % Check not overusing desal
 desaltotal = desalfill + desalsupply;
-if desaltotal > runParam.desalCapacity
+if desaltotal > capacity
     error('desal supply exceeds capacity')
 end
 
