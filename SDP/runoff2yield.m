@@ -49,6 +49,7 @@ if ~runParam.desalOn
 else
     
 desalsupply = zeros(numRuns,numYears*12);
+desalthreshold = runParam.desalcapacity 
     for t = 1:numYears*12
         if t == 1
             Kprev = K0;
@@ -68,6 +69,8 @@ desalsupply = zeros(numRuns,numYears*12);
         indGreat = ~indLess & ~indMid;
         release(indGreat,t) = Kprev + inflow(indGreat,t) - env_flow - E(indGreat,t);
         K(indGreat,t) = 0;
+        
+        
 
     end
 end

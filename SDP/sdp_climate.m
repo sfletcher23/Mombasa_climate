@@ -361,7 +361,7 @@ for t = linspace(N,1,N)
                   
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
-                    cost = (sCost + dCost) / (1+costParam.discountrate)^t;
+                    cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
                                       
                    
                     % Calculate transition matrix
@@ -552,7 +552,7 @@ for k = 1:4
             end
             ind_dam = find(a == a_exp);
             damCostTime(i,t,k) = dam_cost(ind_dam);
-            totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^t;
+            totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
 
 
             % Simulate transition to next state
