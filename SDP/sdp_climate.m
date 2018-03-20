@@ -105,7 +105,10 @@ else
     [infra_cost(2),~,opex_cost] = capacity2desalcost(runParam.desalCapacity(1),0); % small
     infra_cost(3) = capacity2desalcost(runParam.desalCapacity(2),0); % large
     [infra_cost(4), infra_cost(5)] = capacity2desalcost(runParam.desalCapacity(1), runParam.desalCapacity(2));  
-
+    
+    % desal capital costs two individual plants
+    infra_cost(4) = infra_cost(2);
+    infra_cost(5) = infra_cost(4);
 
 end
 infra_cost
