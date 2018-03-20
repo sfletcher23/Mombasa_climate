@@ -16,14 +16,16 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 runParam = struct;
 runParam.N = 5;
-runParam.runSDP = false;
+runParam.runSDP = true;
 runParam.steplen = 20; 
 runParam.runRunoff = false;
 runParam.runTPts = false;
 runParam.runoffPostProcess = false;
 runParam.forwardSim = true;
 runParam.calcTmat = true;
-runParam.calcShortage = false;
+runParam.calcShortage = true;
+runParam.desalOn = true;
+runParam.desalCapacity = 50;
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
@@ -359,7 +361,7 @@ for t = linspace(N,1,N)
                   
                     ind_dam = find(a == a_exp);
                     dCost = dam_cost(ind_dam)
-                    cost = (sCost + dCost) * (1+costParam.discountrate)^t;
+                    cost = (sCost + dCost) / (1+costParam.discountrate)^t;
                                       
                    
                     % Calculate transition matrix
@@ -550,7 +552,7 @@ for k = 1:4
             end
             ind_dam = find(a == a_exp);
             damCostTime(i,t,k) = dam_cost(ind_dam);
-            totalCostTime(i,t,k) = shortageCostTime(i,t,k) + damCostTime(i,t,k);
+            totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^t;
 
 
             % Simulate transition to next state
