@@ -108,7 +108,7 @@ else
     
     % desal capital costs two individual plants
     infra_cost(4) = infra_cost(2);
-    infra_cost(5) = infra_cost(4);
+    infra_cost(5) = capacity2desalcost(runParam.desalCapacity(2) - runParam.desalCapacity(1),0);
 
 end
 infra_cost
