@@ -95,26 +95,63 @@ end
 
     
 %% Sample single time series
-if false
+if true
 
-i = randi(125);
-index_s_t = 44;
+i = randi(R);
+i = 4;
+index_s_t = 44+55;
 index_s_p = 1;
-t = 5;
 
-storage = [80 120 160];
+if false
+runParam.desalOn = false;
+
+storage = [80 120];
 figure;
 for s = 1:length(storage)
-    [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
-        runoff2yield(runoff{index_s_t,index_s_p,t}(i:i+1,:), T_ts{index_s_t,t}(i:i+1,:), P_ts{index_s_p,t}(i:i+1,:), storage(s), runParam, climParam);
+    [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply]  = ...
+        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage(s), runParam, climParam);
     subplot(length(storage), 1, s)
-    plot(yield_mdl(1,:)')
+    b = bar([yield_mdl(1,:)' desalsupply(1,:)'], 'stacked');
+    b(1).FaceColor = [.9 .9 .9];
+    b(2).FaceColor = [.75 .75 .75];
     hold on
-    plot(K(1,:)')
-    plot(unmet_dom_mdl(1,:)')
+    plot(K(1,:)', 'LineWidth', 2)
+    plot(dmd(1,:)','LineWidth', 2)
     title(strcat('Unmet demand:', {' '}, num2str(sum(unmet_dom_mdl(1,:))), {' '}, 'Storage: ', {' '}, num2str(storage(s))))
 end
-legend('yield', 'storage', 'unmet')
+legend('yield', 'desal', 'storage', 'demand')
+end
+
+
+i = randi(R);
+index_s_t = 44+55;
+index_s_p = 1;
+index_s_t = find(s_T_abs == climParam.T0_abs)
+index_s_p = find(s_P_abs == climParam.P0_abs)
+
+
+runParam.desalOn = true;
+
+storage = [120];
+desalCapacity = [60 80];
+
+figure;
+for s = 1:2
+    runParam.desalCapacity = desalCapacity(s);
+    [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply]  = ...
+        runoff2yield(runoff{index_s_t,index_s_p,1}(i:i+1,:), T_ts{index_s_t,1}(i:i+1,:), P_ts{index_s_p,1}(i:i+1,:), storage, runParam, climParam);
+    subplot(2, 1, s)
+    b = bar([yield_mdl(1,:)' desalsupply(1,:)'], 'stacked');
+    b(1).FaceColor = [.9 .9 .9];
+    b(2).FaceColor = [.75 .75 .75];
+    hold on
+    plot(K(1,:)', 'LineWidth', 2)
+    plot(dmd(1,:)','LineWidth', 2)
+    title(strcat('Unmet demand:', {' '}, num2str(sum(unmet_dom_mdl(1,:))), {' '}, 'Desal cap: ', {' '}, num2str(desalCapacity(s))))
+end
+legend('yield', 'desal', 'storage', 'demand')
+
+
 
 end
 

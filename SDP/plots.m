@@ -57,7 +57,7 @@ end
 
 %% Expansion policy for flexible dam
 
-decadeline = {'2001\newline-2020', '2021\newline-2040', '2041\newline-2060', '2061\newline-2080', '2081\newline-2100'};
+decadeline = {'2001-\newline2020', '2021-\newline2040', '2041-\newline2060', '2061-\newline2080', '2081-\newline2100'};
 decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 % vldTInd = cell(1,5);
 % vldPInd = cell(1,5);
@@ -114,21 +114,28 @@ suptitle('Expansion Policy for Flexible Dam')
 
 %%  First decision
 
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('div','PRGn',9);
+
 figure;
-
-
-
-ax = subplot(2,2,i-1);
+ax = gca;
+colormap(ax, clrmp([2 8],:))
+hold on
+patch([100 100 101 101], [100 101 100 101], clrmp(2,:))
+patch([100 100 101 101], [100 101 100 101], clrmp(8,:))
+legend('Large','Flexible')
+legend('location', 'NE')
 imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)],  ...
-    X(:,:,1,1), [0 4])
+    X(:,:,1,1), [2 3])
 ax.YDir = 'normal';
 
 xlabel('Mean P [mm/m]')
 ylabel('Mean T [degrees C]')
-xlim([s_P_abs(1)-1 s_P_abs(28)+1])
-ylim([s_T_abs(1) s_T_abs(95)+.2])
+xlim([s_P_abs(1) s_P_abs(end)])
+ylim([s_T_abs(1) s_T_abs(end)])
 
-title('Initial decision')
+
+title('Initial dam decision')
 
 
 %% Version 2: Expansion policy for flexible dam
@@ -306,14 +313,11 @@ ax.XTick = [1 2 3];
 xticklabels({'Small', 'Large', 'Flexible'})
 title('Upfront dam choice')
 ylim([0 R])
+xlim([.4 3.7])
 ylabel(strcat('Frequency in', num2str(R),' simulations'))
 
 set(findall(f,'-property','FontSize'),'FontSize',13)
 
-labels = {'line1 line2','line1 line2','line1 line2'};
-labels = cellfun(@(x) strrep(x,' ','\newline'), labels,'UniformOutput',false);
-a = gca;
-a.XTickLabel = labels;
 
 %% CDF of flex vs static
 
