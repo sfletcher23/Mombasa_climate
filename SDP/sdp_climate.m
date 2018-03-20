@@ -283,8 +283,8 @@ if runParam.calcShortage
     
     desal_opex = nan(M_T_abs, M_P_abs, length(storage), N);
     for t = 1:N
-        discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:t*runParam.steplen), 100, 1);
-        desal_opex(:,:,:,t) = cellfun(@(x) mean(opex_cost * x ./ discountfactor, 2), desal);
+        discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:1/12:t*runParam.steplen+11/12), 100, 1);
+        desal_opex(:,:,:,t) = cell2mat(cellfun(@(x) mean(sum(opex_cost * x ./ discountfactor, 2)), desal, 'UniformOutput', false));
     end
     
 
