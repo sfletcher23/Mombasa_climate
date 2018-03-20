@@ -89,7 +89,6 @@ a_exp = 0:4; % 0 - do nothing; 1 - build small; 2 - build large; 3 - build flex
             % 4 - expand flex 
             
 infra_cost = zeros(1,length(a_exp));
-opex_cost = zeros(1,length(a_exp));
 if ~runParam.desalOn
     
     % dam costs
@@ -103,10 +102,10 @@ if ~runParam.desalOn
     
 else
     % desal capital costs
-    [infra_cost(2),~,opex_cost(2)] = capacity2desalcost(runParam.desalCapacity(1),0); % small
-    [infra_cost(3),~,opex_cost(3)] = capacity2desalcost(runParam.desalCapacity(2),0); % large
-    [infra_cost(4), infra_cost(5), opex_cost(4)] = capacity2desalcost(runParam.desalCapacity(1), runParam.desalCapacity(2));  
-    opex_cost(5) = opex_cost(4);
+    [infra_cost(2),~,opex_cost] = capacity2desalcost(runParam.desalCapacity(1),0); % small
+    infra_cost(3) = capacity2desalcost(runParam.desalCapacity(2),0); % large
+    [infra_cost(4), infra_cost(5)] = capacity2desalcost(runParam.desalCapacity(1), runParam.desalCapacity(2));  
+
 
 end
 infra_cost
@@ -392,7 +391,7 @@ for t = linspace(N,1,N)
                     ind_dam = find(a == a_exp);
                     dCost = infra_cost(ind_dam);
                     cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
-                    opex = opex_cost(index_s_t, index_s_p, short_ind, t);
+                    opex = desal_opex(index_s_t, index_s_p, short_ind, t);
                     cost = cost + opex;
                                       
                    
@@ -585,15 +584,10 @@ for k = 1:4
             end
             ind_dam = find(a == a_exp);
             damCostTime(i,t,k) = infra_cost(ind_dam);
-            opexCostTime(i,t,k) = opex_cost(index_t, index_p, short_ind, t);
+            opexCostTime(i,t,k) = desal_opex(index_t, index_p, short_ind, t);
             totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
             totalCostTime(i,t,k) = totalCostTime(i,t,k) + opexCostTime(i,t,k);
             
-
-                    cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
-                    opex = opex_cost(index_s_t, index_s_p, short_ind, 1);
-                    cost = cost + opex;
-
             % Simulate transition to next state
             % Capacity transmat vector
             T_cap = zeros(1,M_C);
