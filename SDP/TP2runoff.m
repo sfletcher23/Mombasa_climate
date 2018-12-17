@@ -16,7 +16,7 @@ calibrationFile = '29_Jan_2018_17_10_19_maybe_winner_3.mat';
 if ~isempty(getenv('SLURM_JOB_ID'))
     load(strcat('/net/fs02/d2/sfletch/Mombasa_climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
 else
-    load(strcat('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
+    load(strcat('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
 end
 
 

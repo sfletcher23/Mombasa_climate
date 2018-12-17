@@ -24,7 +24,7 @@ daterange = (timestep-1)*steplen*12 + startdate: (timestep)*steplen*12 + startda
 if ~isempty(getenv('SLURM_JOB_ID'))
     load('/net/fs02/d2/sfletch/Mombasa_climate/BMA_code/Input/Mombasa_TandP.mat')
 else
-    load('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat', 'Tij', 'Pij')
+    load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat', 'Tij', 'Pij')
 end
 
 % Create standardized anomalies relative to decadal average across all GCMs for the current daterange

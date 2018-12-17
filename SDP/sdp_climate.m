@@ -1,5 +1,19 @@
+%% Climate change uncertainty stochastic dynamic program (SDP)
 
-% Add subfolders to path
+% This is the main script in the analysis: it integrates the Bayesian
+% statitiscal model results, CLIRUN rainfall-runoff model, and water
+% system/cost models into the forumulation of an SDP. The SDP develops
+% optimal policies for 1) which of three infrastructure alternatives to
+% choose in an initial planning period and 2) under what climate conditions
+% to add capacity in a flexible planning process. Finally, it uses Monte
+% Carlo simulation on the uncertain climate states to assess the peformance
+% of the infrastructure policies developed by the SDP.
+
+
+%% Setup 
+
+% Add subfolders to path; runs either on desktop or SLURM-based queueing
+% system on a cluster
 if ~isempty(getenv('SLURM_JOB_ID'))
     addpath(genpath('/net/fs02/d2/sfletch/Mombasa_climate'))
 else
@@ -7,6 +21,8 @@ else
 end
 
 jobid = getenv('SLURM_JOB_ID');
+
+% Get date for file name when saving results 
 datetime=datestr(now);
 datetime=strrep(datetime,':','_'); %Replace colon with underscore
 datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
@@ -64,37 +80,52 @@ runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 runParam.saveOn = true;
 
 
-
 % Set up climate parameters
 climParam = struct;
 
-%  Number of simulations to use in order to convert 
+%  Number of simulations to use in order to estimate absolute T and P
+%  values based on relative difference from one time period to the next
 climParam.numSamp_delta2abs = 100000;
 
-% Number of T,P time series fo 
-climParam.numSampTS = 20;
+% Number of T,P time series to generate using stochastic weather generator
+climParam.numSampTS = 100;
+
+% If true, test number of simulated climate values are outside the range of
+% the state space in order to ensure state space validity
 climParam.checkBins = false;
 
+
+% Set up cost parameters; vary for sensitivity analysis
 costParam = struct;
-costParam.yieldprctl = 50;
+
+%costParam.yieldprctl = 50;
+
+% Value of shortage penalty for domestic use [$/m3]
 costParam.domShortage = 5;
+
+% Value of shortage penalty for ag use [$/m3]
 costParam.agShortage = 0;
+
+% Discount rate
 costParam.discountrate = .03;
 
 
-%% State and Action Definitions 
+%% SDP State and Action Definitions 
 
 N = runParam.N;
 
-% Generate state space for climate variables
+% Define state space for mean 20-year precipitation and temperature
+
+% Percent change in precip from one time period to next
 climParam.P_min = -.3;
 climParam.P_max = .3;
-climParam.P_delta = .02; %mm/m
+climParam.P_delta = .02; 
 s_P = climParam.P_min : climParam.P_delta : climParam.P_max;
 climParam.P0 = s_P(15);
-climParam.P0_abs = 77;
+climParam.P0_abs = 77; %mm/month
 M_P = length(s_P);
 
+% Change in temperature from one time period to next
 climParam.T_min = 0;
 climParam.T_max = 1.5;
 climParam.T_delta = 0.05; % deg C
@@ -103,33 +134,35 @@ climParam.T0 = s_T(1);
 climParam.T0_abs = 26;
 M_T = length(s_T);
 
-
+% Absolute temperature values
 T_abs_max = max(s_T) * N;
 s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
 M_T_abs = length(s_T_abs);
 T_bins = [s_T_abs-climParam.T_delta/2 s_T_abs(end)+climParam.T_delta/2];
 T_Temp_abs = zeros(M_T_abs,M_T_abs,N);
 
-
+% Absolute percip values
 P_abs_max = max(s_P) * N;
 s_P_abs = 66:1:97;
 M_P_abs = length(s_P_abs);
 P_bins = [s_P_abs-climParam.P_delta/2 s_P_abs(end)+climParam.P_delta/2];
 T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
 
-
 % State space for capacity variables
 s_C = 1:4; % 1 - small;  2 - large; 3 - flex, no exp; 4 - flex, exp
 M_C = length(s_C);
-storage = [80 120];
+storage = [80 120]; % small dam, large dam capacity in MCM
 
 % Actions: Choose dam option in time period 1; expand dam in future time
 % periods
 a_exp = 0:4; % 0 - do nothing; 1 - build small; 2 - build large; 3 - build flex
             % 4 - expand flex 
-            
+ 
+% Define infrastructure costs            
 infra_cost = zeros(1,length(a_exp));
 if ~runParam.desalOn
+    
+    % Planning scenarios A and B with current demand: only model dam
     
     % dam costs
     infra_cost(2) = storage2damcost(storage(1),0);
@@ -141,6 +174,8 @@ if ~runParam.desalOn
     shortagediff = (infra_cost(3) - infra_cost(2))/ (costParam.domShortage * 1e6);
     
 else
+    % Planning scenario C: dam exists, make decision about new desalination plant
+    
     % desal capital costs
     [infra_cost(2),~,opex_cost] = capacity2desalcost(runParam.desalCapacity(1),0); % small
     infra_cost(3) = capacity2desalcost(runParam.desalCapacity(2),0); % large
@@ -149,19 +184,14 @@ else
     % desal capital costs two individual plants
     infra_cost(4) = infra_cost(2);
     infra_cost(5) = capacity2desalcost(runParam.desalCapacity(2) - runParam.desalCapacity(1),0);
-    opex_cost
 end
 
-
-
-fprintf('Large is %.1f MCM shortage \n small is %.1f MCM shoratge \n exp cost is %.1f MCM of shorage \n', ...
-    [infra_cost(3) /(costParam.domShortage * 1e6) infra_cost(2) /(costParam.domShortage * 1e6) ...
-    infra_cost(5) /(costParam.domShortage * 1e6)])
 
   
 %% Calculate climate transition matrix 
 
-% Calculate T_clim
+% Calculate the Bellman transition vector for the climate states using the
+% Bayesian statistical model
 
 if runParam.calcTmat   
     load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
@@ -171,16 +201,16 @@ else
     load('T_Temp_Precip') 
 end
 
-
-% Prune state space
+% Prune state space -- no need to calculate policies for T and P states
+% that are never reached when simulating future climates based on Bayesian
+% model
 for t = 1:N
     index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
 end
 
 
-%% Runoff time series for each T,P state
-
+%% T, P, Runoff monthly time series for each long-term T, P state
 
 % Use k-nn stochastic weather generator (Rajagopalan et al. 1999) to
 % generate time series of monthly T and P based on 20-year means from state
@@ -368,7 +398,7 @@ else
 end
 
     
-%% Backwards Recursion
+%% Solve SDP optimal policies using backwards recursion
 
 if runParam.runSDP
 
@@ -455,7 +485,7 @@ for t = linspace(N,1,N)
                         short_ind = 2; % large capacity
                     end
                     
-                    sCost = shortageCost(index_s_t, index_s_p, short_ind, 1)
+                    sCost = shortageCost(index_s_t, index_s_p, short_ind, 1);
                     if t == 1 
                         sCost = 0;  % This is upfront building period
                     end
@@ -501,6 +531,7 @@ for t = linspace(N,1,N)
                     end
                     
                     % Calculate full transition matrix
+                    % Assumes state variables are uncorrelated
                     % T gives probability of next state given current state and actions
 
                     TRows = cell(3,1);
@@ -517,16 +548,12 @@ for t = linspace(N,1,N)
                     end
                     
                    % Check if best decision
-                    checkV = cost + expV
+                    checkV = cost + expV;
                     if checkV < bestV
                         bestV = checkV;
                         bestX = a;
                     end
-                    
-                     % Debug
-                    if sc == 3
-                        sc
-                    end
+                                        
                 end
             
             % Check that bestV is not Inf
@@ -555,12 +582,15 @@ end
 
 %% Forward simulation
 
-if runParam.forwardSim
-    
+% Use optimal expansion policy derived from SDP to simulate performance of
+% flexible alternative and compare to small and large alternatives
+
 % 3 runs: flex, large, small
-    
-R = 1000;
-N = runParam.N;
+
+if runParam.forwardSim
+        
+R = 1000; % Number of forward Monte Carlo simulations
+N = runParam.N; % Number of time periods
 
 T_state = zeros(R,N);
 P_state = zeros(R,N);
@@ -590,7 +620,6 @@ C_state(:,1,1) = 3; % Always flex
 C_state(:,1,2) = 2; % Always large
 C_state(:,1,3) = 1; % Always small
 C_state(:,1,4) = 1; % Choose based on policy
-
 
 for i = 1:R
     for t = 1:N
@@ -734,13 +763,12 @@ for i = 1:R
 end
 
 
-% if runParam.saveOn
-%     
-%     savename_results = strcat('results', jobid,'_', datetime);
-%     save(savename_results)
-%     
-% end
-
+if runParam.saveOn
+    
+    savename_results = strcat('results', jobid,'_', datetime);
+    save(savename_results)
+    
+end
 
 
 end
