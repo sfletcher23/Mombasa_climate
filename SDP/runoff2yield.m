@@ -3,6 +3,9 @@ function  [yield, K, demand, unmet_dom, unmet_ag, desalsupply, desalfill]  = run
 % Inflow is a monthly time series in MCM/y starting in January
 % Storage is a scalar 
 
+desalsupply = [];
+desalfill = [];
+
 numYears = runParam.steplen;
 [numRuns,~] = size(T);
 

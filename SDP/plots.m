@@ -1,5 +1,7 @@
 %% Plots plots plots !!!
 
+load('results67847_19_Mar_2018_21_47_26_base.mat')
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
 
 %% Analyze runoff and shortage
 if false
@@ -88,11 +90,17 @@ decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 % XNow{5} = X(:,:,3,5);
 % % XNow{5}(52:54,:) = 0;
 
+if true
+
 figure;
-colormap( [ .9 .9 .9; 0 0 0])
+
+
+clrmp = cbrewer('seq','Greens',3);
+colormap(clrmp([1 3],:))
+subind = [2 3 5 6];
 
 for i = 2:5
-    ax = subplot(2,2,i-1);
+    ax = subplot(2,3,subind(i-1));
     imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)],  ...
         X(:,:,3,i), [0 4])
     ax.YDir = 'normal';
@@ -103,8 +111,8 @@ for i = 2:5
     ylim([s_T_abs(1) s_T_abs(95)+.2])
     if i == 2
         hold on
-        patch([100 100 101 101], [100 101 100 101], [.9 .9 .9])
-        patch([100 100 101 101], [100 101 100 101], [0 0 0])
+        patch([100 100 101 101], [100 101 100 101], clrmp(1,:))
+        patch([100 100 101 101], [100 101 100 101],clrmp(3,:))
         legend('Do not expand','Expand')
         legend('location', 'NE')
     end
@@ -112,17 +120,22 @@ for i = 2:5
 end
 suptitle('Expansion Policy for Flexible Dam')
 
+end
+
 %%  First decision
 
-addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
-clrmp = cbrewer('div','PRGn',9);
+if false
 
-figure;
+addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
+clrmp = cbrewer('seq','Purples',3);
+
+% figure;
+subplot(2,3,[1 4])
 ax = gca;
-colormap(ax, clrmp([2 8],:))
+colormap(ax, clrmp([3 1],:))
 hold on
-patch([100 100 101 101], [100 101 100 101], clrmp(2,:))
-patch([100 100 101 101], [100 101 100 101], clrmp(8,:))
+patch([100 100 101 101], [100 101 100 101], clrmp(3,:))
+patch([100 100 101 101], [100 101 100 101], clrmp(1,:))
 legend('Large','Flexible')
 legend('location', 'NE')
 imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)],  ...
@@ -137,10 +150,11 @@ ylim([s_T_abs(1) s_T_abs(end)])
 
 title('Initial dam decision')
 
+end
 
 %% Version 2: Expansion policy for flexible dam
 
-if true
+if false
 
 figure;
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
@@ -218,8 +232,7 @@ end
 
 %% Visualize value matrix for action 3 vs 4 in final time series
 
-addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/cbrewer'))
-
+if false
 
 Vno = V(:,:,3,5);
 Vexp = V(:,:,4,5);
@@ -250,9 +263,13 @@ colorbar
 title('X')
 ax.YDir = 'normal';
 
+end
+
 %% Simulation
 
 %% Histogram of expansion time
+
+if true
 
 indExp = action(:,:,1) == 4;
 expOverTime = zeros(size(action(:,:,1)));
@@ -278,13 +295,17 @@ legend('Build',  'Never build')
 legend('Location', 'NW')
 title(strcat('Histogram of expansion time in ', num2str(R), ' simulations'))
 
+end
+
 %% Histogram of initial decision and exp policy
+
+if true
 
 grnclr = cbrewer('seq', 'Greens', 6);
 
 f = figure;
 % plot expansion policy
-subplot(1,9,5:9)
+subplot(3,9,23:27)
 yLarge = histc(expTimeLarge, [2:5]);
 bar(2:5, [yLarge ], 'stacked', 'b')
 hold on 
@@ -292,19 +313,19 @@ bar(6, countNever, 'k')
 labels = cell(1,5);
 labels(1:4) = decadeline(2:5);
 labels{5} = 'Never';
-ax = gca;
+ax = gca; 
 xlim([1.2 6.7])
 ax.XTick = 2:6;
 ax.XTickLabel = labels;
 % xlabel('Expansion Time')
-ylabel(strcat('Frequency in', num2str(R),' simulations'))
+ylabel(strcat('Frequency')) % in', num2str(R),' simulations'))
 legend('Build',  'Never build')
 legend('Location', 'NW')
 legend('boxoff')
 title(strcat('Expansion decision for flexible dam'))
 ylim([0 R])
 
-subplot(1,9,1:3)
+subplot(3,9,19:21)
 h = histc(action(:,1,4),[.5 1.5 2.5 3.5]);
 b = bar(1:3, h(1:3));
 b.FaceColor = grnclr(6,:);
@@ -314,12 +335,15 @@ xticklabels({'Small', 'Large', 'Flexible'})
 title('Upfront dam choice')
 ylim([0 R])
 xlim([.4 3.7])
-ylabel(strcat('Frequency in', num2str(R),' simulations'))
+ylabel(strcat('Frequency')) % in', num2str(R),' simulations'))
 
+f = gcf;
 set(findall(f,'-property','FontSize'),'FontSize',13)
 
-
+end
 %% CDF of flex vs static
+
+if true
 
 totalCostFlex = sum(totalCostTime(:,:,1),2);
 totalCostLarge = sum(totalCostTime(:,:,2),2);
@@ -338,6 +362,9 @@ legend( 'Large', 'Small','Flexible')
 legend('boxoff')
 title('CDF of Total Cost')
 xlabel('Cost [M$]')
+ax = gca;
+ax.XGrid = 'off'
+ax.YGrid = 'off'
 
 subplot(3,1,2)
 hold on
@@ -349,6 +376,9 @@ c1 = cdfplot(sum(damCostTime(:,:,1),2)/1E6);
 c1.LineWidth = 1.5;
 title('CDF of Dam Cost')
 xlabel('Cost [M$]')
+ax = gca;
+ax.XGrid = 'off'
+ax.YGrid = 'off'
 
 subplot(3,1,3)
 hold on
@@ -360,12 +390,18 @@ c1 = cdfplot(sum(shortageCostTime(:,:,1),2)/1E6);
 c1.LineWidth = 1.5;
 title('CDF of Shortage Cost')
 xlabel('Cost [M$]')
+ax = gca;
+ax.XGrid = 'off'
+ax.YGrid = 'off'
 
 mean(totalCostFlex)
 mean(totalCostLarge)
 mean(totalCostSmall)
 
+
 figure;
+
+% subplot(3,1,1)
 hold on
 c2 = cdfplot(totalCostLarge/1E6);
 c2.LineWidth = 1.5;
@@ -377,9 +413,16 @@ legend( 'Large', 'Small','Flexible')
 legend('boxoff')
 title('CDF of Total Cost')
 xlabel('Cost [M$]')
+ax = gca;
+ax.XGrid = 'off'
+ax.YGrid = 'off'
+xlim([170 350])
 
-
+end
 %% States over time
+
+if false
+    
 figure;
 if R >= 20
     ind = 1:20;
@@ -402,7 +445,10 @@ subplot(3,1,3)
 plot(shortageCostTime(:,:,3)')
 title('small')
 
+end
 %% Heatmaps: unmet demand for small and large storage
+
+if false
 
 avgUnmetSmall = unmet_dom(:,:,1,1);
 avgUnmetLarge = unmet_dom(:,:,2,1);
@@ -413,14 +459,14 @@ expPrecip = mean(P_state(:,end));
 
 % Heatmap 
 figure;
-clrmp = cbrewer('div','RdYlBu',12);
+clrmp = cbrewer('div','RdYlBu',40);
 colormap(clrmp)
 
 subplot(2,1,1)
 ax = gca;
 colormap(ax, flipud(clrmp))
-imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetSmall, [0 55])
-ax.YDir = 'normal'
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetSmall, [0 30])
+ax.YDir = 'normal';
 c = colorbar;
 c.Label.String = 'MCM';
 xticks(s_P_abs(1): s_P_abs(end))
@@ -438,7 +484,7 @@ scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
 subplot(2,1,2)
 ax = gca;
 colormap(ax, flipud(clrmp))
-imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetLarge, [0 55])
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetLarge, [0 30])
 ax.YDir = 'normal';
 c = colorbar;
 c.Label.String = 'MCM';
@@ -455,6 +501,59 @@ scatter(climParam.P0_abs, climParam.T0_abs, 'o', 'g', 'SizeData', 40, 'MarkerFac
 scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
 legend('Current climate', 'Expected future climate')
 
+end
+%% Heatmaps: shortage for small and large storage
+
+avgUnmetSmall = shortageCost(:,:,1,1)/1E6;
+avgUnmetLarge = shortageCost(:,:,2,1)/1E6;
+
+% Expected future temp and precip
+expTemp = mean(T_state(:,end));
+expPrecip = mean(P_state(:,end));
+
+% Heatmap 
+figure;
+clrmp = cbrewer('div','RdYlBu',10);
+colormap(clrmp)
+
+subplot(2,1,1)
+ax = gca;
+colormap(ax, flipud(clrmp))
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetSmall, [0 80])
+ax.YDir = 'normal'
+c = colorbar;
+c.Label.String = 'M$';
+xticks(s_P_abs(1):2: s_P_abs(end))
+yticks(s_T_abs(1):1: s_T_abs(end))
+xticklabels(s_P_abs(1):2: s_P_abs(end))
+yticklabels(s_T_abs(1):.5:s_T_abs(end))
+xlim([s_P_abs(1) 90])
+xlabel('P [mm/m]')
+ylabel('T [degrees C]')
+title('Mean 20-year Shortage Cost: Small ')
+hold on
+scatter(climParam.P0_abs, climParam.T0_abs, 'o', 'g', 'SizeData', 40, 'MarkerFaceColor', 'g')
+scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
+
+subplot(2,1,2)
+ax = gca;
+colormap(ax, flipud(clrmp))
+imagesc([s_P_abs(1) s_P_abs(end)],[s_T_abs(1) s_T_abs(end)], avgUnmetLarge, [0 80])
+ax.YDir = 'normal';
+c = colorbar;
+c.Label.String = 'M$';
+xticks(s_P_abs(1):2: s_P_abs(end))
+yticks(s_T_abs(1):1: s_T_abs(end))
+xlim([s_P_abs(1) 90])
+xticklabels(s_P_abs(1):2: s_P_abs(end))
+yticklabels(s_T_abs(1):.5:s_T_abs(end))
+xlabel('P [mm/m]')
+ylabel('T [degrees C]')
+title('Mean 20-year Shortage Cost: Large ')
+hold on
+scatter(climParam.P0_abs, climParam.T0_abs, 'o', 'g', 'SizeData', 40, 'MarkerFaceColor', 'g')
+scatter(expPrecip, expTemp, 'o', 'm', 'SizeData', 40, 'MarkerFaceColor', 'm')
+legend('Current climate', 'Expected future climate')
 
 
 %% Heatmaps Unmet demand by time

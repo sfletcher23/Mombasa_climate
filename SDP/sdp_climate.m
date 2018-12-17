@@ -24,7 +24,7 @@ runParam.runoffPostProcess = false;
 runParam.forwardSim = true;
 runParam.calcTmat = true;
 runParam.calcShortage = true;
-runParam.desalOn = true;
+runParam.desalOn = false;
 runParam.desalCapacity = [60 80];
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
@@ -37,9 +37,9 @@ climParam.checkBins = false;
 
 costParam = struct;
 costParam.yieldprctl = 50;
-costParam.domShortage = 15;
+costParam.domShortage = 5;
 costParam.agShortage = 0;
-costParam.discountrate = .05;
+costParam.discountrate = .03;
 
 
 %% State and Action Definitions 
@@ -109,10 +109,10 @@ else
     % desal capital costs two individual plants
     infra_cost(4) = infra_cost(2);
     infra_cost(5) = capacity2desalcost(runParam.desalCapacity(2) - runParam.desalCapacity(1),0);
-
+    opex_cost
 end
-infra_cost
-opex_cost
+
+
 
 fprintf('Large is %.1f MCM shortage \n small is %.1f MCM shoratge \n exp cost is %.1f MCM of shorage \n', ...
     [infra_cost(3) /(costParam.domShortage * 1e6) infra_cost(2) /(costParam.domShortage * 1e6) ...
@@ -275,7 +275,9 @@ if runParam.calcShortage
                     unmet_ag(index_s_t, index_s_p, s, t) = mean(sum(unmet_ag_mdl,2));
                     unmet_dom(index_s_t, index_s_p, s, t) = mean(sum(unmet_dom_90,2));
                     yield(index_s_t, index_s_p, s, t) = mean(sum(yield_mdl,2));
-                    desal{index_s_t, index_s_p, s} = desalsupply + desalfill;
+                    if runParam.desalOn
+                        desal{index_s_t, index_s_p, s} = desalsupply + desalfill;
+                    end
                     
                 end
             end
@@ -284,10 +286,14 @@ if runParam.calcShortage
 
     shortageCost =  (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
     
+    if runParam.desalOn
     desal_opex = nan(M_T_abs, M_P_abs, length(storage), N);
     for t = 1:N
         discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:1/12:t*runParam.steplen+11/12), 100, 1);
         desal_opex(:,:,:,t) = cell2mat(cellfun(@(x) mean(sum(opex_cost * x ./ discountfactor, 2)), desal, 'UniformOutput', false));
+    end
+    else
+        desal_opex = [];
     end
     
 
@@ -394,7 +400,11 @@ for t = linspace(N,1,N)
                     ind_dam = find(a == a_exp);
                     dCost = infra_cost(ind_dam);
                     cost = (sCost + dCost) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
-                    opex = desal_opex(index_s_t, index_s_p, short_ind, t);
+                    if runParam.desalOn
+                        opex = desal_opex(index_s_t, index_s_p, short_ind, t);
+                    else
+                        opex = 0;
+                    end
                     cost = cost + opex;
                                       
                    
@@ -486,7 +496,7 @@ if runParam.forwardSim
     
 % 3 runs: flex, large, small
     
-R = 100;
+R = 1000;
 N = runParam.N;
 
 T_state = zeros(R,N);
@@ -518,15 +528,30 @@ C_state(:,1,2) = 2; % Always large
 C_state(:,1,3) = 1; % Always small
 C_state(:,1,4) = 1; % Choose based on policy
 
-for k = 1:4
-    for i = 1:R
-        for t = 1:N
 
-            % Choose best action given current state
+for i = 1:R
+    for t = 1:N
+        
+        % Choose best action given current state
             index_t = find(T_state(i,t) == s_T_abs);
             index_p = find(P_state(i,t) == s_P_abs);
-            index_c = find(C_state(i,t,k) == s_C);
             
+        
+        % Temperature transmat vector
+            T_Temp_row = T_Temp(:,index_t, t)';
+            if sum(isnan(T_Temp_row)) > 0
+                error('Nan in T_Temp_row')
+            end
+
+            % Precipitation transmat vector
+            T_Precip_row = T_Precip(:,index_p, t)';
+            if sum(isnan(T_Precip_row)) > 0
+                error('Nan in T_Precip_row')
+            end
+        
+        for k = 1:4
+            
+            index_c = find(C_state(i,t,k) == s_C);
             % In flex case follow exp policy, otherwise restrict to large or
             % small and then no exp
             if t==1
@@ -581,14 +606,16 @@ for k = 1:4
             end
 
             % Get shortage and dam costs
-            shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, 1);
+            shortageCostTime(i,t,k) = shortageCost(index_t, index_p, short_ind, 1)  / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
             if t == 1 
                 shortageCostTime(i,t,k) = 0;  % This is upfront building period
             end
             ind_dam = find(a == a_exp);
-            damCostTime(i,t,k) = infra_cost(ind_dam);
-            opexCostTime(i,t,k) = desal_opex(index_t, index_p, short_ind, t);
-            totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k)) / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
+            damCostTime(i,t,k) = infra_cost(ind_dam)  / (1+costParam.discountrate)^((t-1)*runParam.steplen+1);
+            if runParam.desalOn
+                opexCostTime(i,t,k) = desal_opex(index_t, index_p, short_ind, t);
+            end
+            totalCostTime(i,t,k) = (shortageCostTime(i,t,k) + damCostTime(i,t,k));
             totalCostTime(i,t,k) = totalCostTime(i,t,k) + opexCostTime(i,t,k);
             
             % Simulate transition to next state
@@ -607,17 +634,7 @@ for k = 1:4
                 end                         
             end
 
-            % Temperature transmat vector
-            T_Temp_row = T_Temp(:,index_t, t)';
-            if sum(isnan(T_Temp_row)) > 0
-                error('Nan in T_Temp_row')
-            end
-
-            % Precipitation transmat vector
-            T_Precip_row = T_Precip(:,index_p, t)';
-            if sum(isnan(T_Precip_row)) > 0
-                error('Nan in T_Precip_row')
-            end
+            
             % Combine trans vectors into matrix
             TRows = cell(3,1);
             TRows{1} = T_Temp_row;
