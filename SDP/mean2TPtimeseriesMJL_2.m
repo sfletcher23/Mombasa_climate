@@ -1,5 +1,5 @@
 function [T_ts, P_ts] = mean2TPtimeseriesMJL(timestep, steplen, numsamp)
-% updated March 13 by MJL. Using k-NN boostrapping method
+% updated March 13 by MJL. Using k-NN boostrapping method by Rajagopalan et al., (1999)
 % Create timeseries of temperature and precipitation anomalies for a certain meam T
 % and P states. Anomalies here include the seasonal cycle.  To retrieve T
 % and P values, must add back in annual mean.  
@@ -102,9 +102,8 @@ for year = 1:steplen
         % Sampling from the smallest k  (Step 5)
         successor = discretesample(K, numsamp)';
         time_indx = monthopts(m,firstk_indx(1,successor))+ones(1,numsamp);
-        % i don't know what to do if it gets to the end of our time span,
-        % going to resample a year and set the time indx to the month of
-        % for the following iteration
+        % if it gets to the end of our time span, resample a year and set 
+        % the time indx to the month of for the following iteration
         tmp =  find(time_indx == steplen*12+1);
         if isempty(tmp)
         else

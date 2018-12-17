@@ -1,7 +1,10 @@
 %% Post processing BMA data
 
-% Which files to open - need to set this every run !!!
+% Which files to open 
+
+% Date of run
 dateOpen = '2018-01-29';
+
 % Need to input jobid of T and P runs if running on cluster
 jobid = (getenv('SLURM_JOB_ID'));
 if ~isempty(jobid)

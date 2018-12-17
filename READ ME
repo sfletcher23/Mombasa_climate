@@ -1,0 +1,27 @@
+READ ME
+
+Title: Learning about climate change uncertainty enables flexible water infrastructure planning
+Authors: Sarah Fletcher, Megan Lickely, and Kenneth Strzepek
+
+Code documentation by Sarah Fletcher
+Massachusetts Institute of Technology
+Last updated: December 2018
+
+
+Code used and developed for this project comprises three main components:
+
+1) Bayesian statistical model
+2) CLIRUN hydrological model
+3) Stochastic dynamic program (SDP)
+
+
+Step 1: Run Bayeisan statistical model analysis
+
+The code for the Bayesian statistical model is contained in the folder BMA_code. 
+To complete this analysis the following steps are needed:
+
+	1) Run pre_process_BMA.m in MATLAB. This takes historical and projected climate data from the file Input/Mombasa_TandP.mat and formats it to prepare for the Bayeisan analysis.
+
+	2) Run MomUni_P.R and MomUni_T.R scripts using R. These scripts do batch analysis of the Bayesian modeling for each virtual future observation of T and P. To do this, they call the script REA.Gibbs.r, which was provided by Claudia Tebaldi, based on her 
+
+

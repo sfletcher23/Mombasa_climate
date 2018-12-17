@@ -14,24 +14,64 @@ datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 %% Parameters
 
+% Set up run paramters
+% Two purposes: 1) different pieces can be run independently using
+% saved results and 2) different planning scenarios (table 1) can be run
 runParam = struct;
-runParam.N = 5;
-runParam.runSDP = true;
+
+% Number of time periods
+runParam.N = 5; 
+
+% If true, run SDP to calculate optimal policies
+runParam.runSDP = true; 
+
+% Number of years to generate in T, P, streamflow time series
 runParam.steplen = 20; 
-runParam.runRunoff = false;
-runParam.runTPts = false;
-runParam.runoffPostProcess = false;
-runParam.forwardSim = true;
-runParam.calcTmat = true;
-runParam.calcShortage = true;
-runParam.desalOn = false;
+
+% If true, simulate runoff time series from T, P time series using CLIRUN. If false, load saved.
+runParam.runRunoff = false; 
+
+% If true, simulate T, P time series from mean T, P states using stochastic weather gen. If false, load saved.
+runParam.runTPts = false; 
+
+% If true, change indices of saved runoff time series to correspond to T, P states (needed for parfor implementation)
+runParam.runoffPostProcess = false; 
+
+% If true, use optimal policies from SDP to do Monte Carlo simulation to esimate performance
+runParam.forwardSim = true; 
+
+% If true, calculate Bellman transition matrix from BMA results. If false, load saved.
+runParam.calcTmat = true; 
+
+% If true, calculate water shortage costs from runoff times series using water system model. If false, load saved.
+runParam.calcShortage = true; 
+
+% If false, do not include deslination plant (planning scenarios A and B
+% with current demand in table 1). If true, include desalination plant
+% (planning scenario C with higher deamnd).
+runParam.desalOn = false; 
+
+% Size of desalination plant for small and large versions [MCM/y]
 runParam.desalCapacity = [60 80];
+
+% If using pre-saved runoff time series, name of .mat file to load
 runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
+
+% If using pre-saved shortage costs, name of .mat file to load
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
+
+% If true, save results
 runParam.saveOn = true;
 
+
+
+% Set up climate parameters
 climParam = struct;
+
+%  Number of simulations to use in order to convert 
 climParam.numSamp_delta2abs = 100000;
+
+% Number of T,P time series fo 
 climParam.numSampTS = 20;
 climParam.checkBins = false;
 
@@ -136,109 +176,115 @@ end
 for t = 1:N
     index_s_p_time{t} = find(~isnan(T_Precip(1,:,t)));
     index_s_t_time{t} = find(~isnan(T_Temp(1,:,t)));
-    
-    
-%     % Don't prune
-%     index_s_p_time{t} = 1:length(s_P_abs);
-%     index_s_t_time{t} = 1:length(s_T_abs);
 end
 
 
 %% Runoff time series for each T,P state
 
+
+% Use k-nn stochastic weather generator (Rajagopalan et al. 1999) to
+% generate time series of monthly T and P based on 20-year means from state
+% space
+
 if runParam.runTPts
 
-T_ts = cell(M_T_abs,N);
-P_ts = cell(M_P_abs,N);
+    T_ts = cell(M_T_abs,N);
+    P_ts = cell(M_P_abs,N);
 
+    [Tanom, Panom] = mean2TPtimeseriesMJL_2(1, runParam.steplen, climParam.numSampTS); 
+    for t = 1:N
 
-[Tanom, Panom] = mean2TPtimeseriesMJL_2(1, runParam.steplen, climParam.numSampTS);
-for t = 1:N
-    
-    for i = 1:M_T_abs  
-        T_ts{i,t} = Tanom + s_T_abs(i)*ones(size(Tanom));
+        for i = 1:M_T_abs  
+            T_ts{i,t} = Tanom + s_T_abs(i)*ones(size(Tanom));
+        end
+
+        for i = 1:M_P_abs  
+            Ptmp = Panom + s_P_abs(i)*ones(size(Tanom));
+            Ptmp(Ptmp<0) = 0;
+            P_ts{i,t} = Ptmp;
+        end
+
     end
-    
-    for i = 1:M_P_abs  
-        Ptmp = Panom + s_P_abs(i)*ones(size(Tanom));
-        Ptmp(Ptmp<0) = 0;
-        P_ts{i,t} = Ptmp;
-    end
-    
+
+    savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
+    save(savename_runoff, 'T_ts', 'P_ts')
+
 end
 
-savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
-save(savename_runoff, 'T_ts', 'P_ts')
 
-end
+% Use CLIRUN hydrological model to simulate runoff monthly time series for
+% each T,P time series
 
 if runParam.runRunoff 
-    
-% Generate runoff timeseries - different set for each T,P combination
-runoff = cell(M_T_abs, M_P_abs, N);
+
+    % Generate runoff timeseries - different set for each T,P combination
+    runoff = cell(M_T_abs, M_P_abs, N);
 
 
-% Set up parallel 
-pc = parcluster('local');
-if ~isempty(getenv('SLURM_JOB_ID'))
-    parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
-end
-
-for t = 1
-    
-    % loop over available temp states
-    index_s_t_thisPeriod = index_s_t_time{t}; 
-    parfor i = 1:length(index_s_t_thisPeriod)
-        index_s_t = index_s_t_thisPeriod(i);
-        
-        runoff_temp = cell(M_P_abs,1);
-        
-        % loop over available precip states
-        index_s_p_thisPeriod = index_s_p_time{t}; 
-        for index_s_p = index_s_p_thisPeriod
-            
-            runoff_temp{index_s_p} = ...
-                TP2runoff(T_ts{index_s_t,t}, P_ts{index_s_p,t}, runParam.steplen);
-
-        end
-        
-        runoff(i, :, t) = runoff_temp;
-        
+    % Set up parallel for running on cluster with SLRUM queueing system
+    pc = parcluster('local');
+    if ~isempty(getenv('SLURM_JOB_ID'))
+        parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
     end
-end
 
+    for t = 1
 
-savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
-save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
+        % loop over available temp states
+        index_s_t_thisPeriod = index_s_t_time{t}; 
+        parfor i = 1:length(index_s_t_thisPeriod)
+            index_s_t = index_s_t_thisPeriod(i);
 
+            runoff_temp = cell(M_P_abs,1);
 
-if runParam.runoffPostProcess
-    % The nature of the parfor loop above saves the runoff timeseries in
-    % the wrong temp index; this section corrects that
-    runoff_post = cell(M_T_abs, M_P_abs, N);
-    for t = 1:N
-        
-        index_s_p_thisPeriod = index_s_p_time{t}; 
-        for index_s_p = index_s_p_thisPeriod
-            
-            index_s_t_thisPeriod = index_s_t_time{t}; 
-            for i= 1:length(index_s_t_thisPeriod)
-                
-                runoff_post{index_s_t_thisPeriod(i),index_s_p,t} = runoff{i,index_s_p,t};
-           
+            % loop over available precip states
+            index_s_p_thisPeriod = index_s_p_time{t}; 
+            for index_s_p = index_s_p_thisPeriod
+
+                % Call CLIRUN streamflow simulator
+                runoff_temp{index_s_p} = ...
+                    TP2runoff(T_ts{index_s_t,t}, P_ts{index_s_p,t}, runParam.steplen);
+
             end
+
+            runoff(i, :, t) = runoff_temp;
+
         end
     end
-    
-    runoff = runoff_post;
-    
+
+
     savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
     save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
-    
-end
+
+
+    if runParam.runoffPostProcess
+        % The nature of the parfor loop above saves the runoff timeseries in
+        % first available index; this section moves to correct cell
+        % corresponsing to P, T state space
+        runoff_post = cell(M_T_abs, M_P_abs, N);
+        for t = 1:N
+
+            index_s_p_thisPeriod = index_s_p_time{t}; 
+            for index_s_p = index_s_p_thisPeriod
+
+                index_s_t_thisPeriod = index_s_t_time{t}; 
+                for i= 1:length(index_s_t_thisPeriod)
+
+                    runoff_post{index_s_t_thisPeriod(i),index_s_p,t} = runoff{i,index_s_p,t};
+
+                end
+            end
+        end
+
+        runoff = runoff_post;
+
+        savename_runoff = strcat('runoff_by_state_', jobid,'_', datetime);
+        save(savename_runoff, 'runoff', 'T_ts', 'P_ts')
+
+    end
 
 else
-    
+
+% If not calculating runoff now, load previously calculated runoff 
 load(runParam.runoffLoadName);
 
 end
@@ -247,10 +293,10 @@ end
 
 if runParam.calcShortage
 
-    unmet_ag = nan(M_T_abs, M_P_abs, length(storage), N);
-    unmet_dom = nan(M_T_abs, M_P_abs, length(storage), N);
-    yield = nan(M_T_abs, M_P_abs, length(storage), N);
-    desal = cell(M_T_abs, M_P_abs, length(storage));
+    unmet_ag = nan(M_T_abs, M_P_abs, length(storage), N);   % Unmet demand for agriculture use
+    unmet_dom = nan(M_T_abs, M_P_abs, length(storage), N);  % Unmet demand for domestic use
+    yield = nan(M_T_abs, M_P_abs, length(storage), N);  % Yield from reservoir
+    desal = cell(M_T_abs, M_P_abs, length(storage));    % Production of desalinated water
 
     for t = 1
         index_s_p_thisPeriod = index_s_p_time{t}; 
@@ -260,7 +306,18 @@ if runParam.calcShortage
             for index_s_t= 1:length(s_T_abs)
 
                 for s = 1:2
-
+                    
+                    % Two options depending on planning scenario from Table
+                    % 1: In scenarios A and B, with low demand, only the
+                    % dam is modeled, and different levels of capacity in
+                    % the state space corresponds to different reservoir
+                    % volumes (desalOn = false). In scenario C, a
+                    % desalination plant is modeled to support higher
+                    % demand > MAR. In this case (desalOn = true), the
+                    % state space corresponds to different desalination
+                    % capcaity volumes, assuming the large volume of
+                    % reservoir storage.
+                    
                     if ~runParam.desalOn
                         % vary storage
                         [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl, desalsupply, desalfill]  = ...
@@ -271,7 +328,9 @@ if runParam.calcShortage
                             runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(2), runParam.desalCapacity(s), runParam, climParam);
                     end
                     
-                    unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
+                    % Calculate umment demand, allowing for 10% of domestic demand
+                    % to be unpenalized, per 90% reliability goal
+                    unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0); 
                     unmet_ag(index_s_t, index_s_p, s, t) = mean(sum(unmet_ag_mdl,2));
                     unmet_dom(index_s_t, index_s_p, s, t) = mean(sum(unmet_dom_90,2));
                     yield(index_s_t, index_s_p, s, t) = mean(sum(yield_mdl,2));
@@ -283,25 +342,29 @@ if runParam.calcShortage
             end
         end
     end
-
+    
+    % Calculate shortage costs incurred for unmet demand, using
+    % differentiated costs for ag and domestic shortages
     shortageCost =  (unmet_ag * costParam.agShortage + unmet_dom * costParam.domShortage) * 1E6; 
     
+    % In planning scenario C with the desalination place, also calculate
+    % discounted cost of oeprating the desalination plant
     if runParam.desalOn
-    desal_opex = nan(M_T_abs, M_P_abs, length(storage), N);
-    for t = 1:N
-        discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:1/12:t*runParam.steplen+11/12), 100, 1);
-        desal_opex(:,:,:,t) = cell2mat(cellfun(@(x) mean(sum(opex_cost * x ./ discountfactor, 2)), desal, 'UniformOutput', false));
-    end
-    else
-        desal_opex = [];
+
+        desal_opex = nan(M_T_abs, M_P_abs, length(storage), N);
+        for t = 1:N
+            discountfactor =  repmat((1+costParam.discountrate) .^ ((t-1)*runParam.steplen+1:1/12:t*runParam.steplen+11/12), 100, 1);
+            desal_opex(:,:,:,t) = cell2mat(cellfun(@(x) mean(sum(opex_cost * x ./ discountfactor, 2)), desal, 'UniformOutput', false));
+        end
+        else
+            desal_opex = [];
     end
     
-
     savename_shortageCost = strcat('shortage_costs', jobid,'_', datetime);
     save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom', 'desal_opex')
 
 else
-%     load(runParam.shortageLoadName);
+    load(runParam.shortageLoadName);
 end
 
     

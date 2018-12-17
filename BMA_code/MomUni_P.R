@@ -1,3 +1,14 @@
+# This file is a script to run a batch of Bayeisan analysis for precipitaiton.
+# It calls REA.Gibbs, which uses MCMC methods to estimate the precipitation distribution for the next time period. 
+# We repeat this for each virutal observation of temperature and precipitation in each time period
+
+
+######################################
+
+# Set up to run on a supercomputing cluster that uses a SLURM queueing system
+
+######################################
+
 # Get environment var from Slurm
 JOBID = Sys.getenv("SLURM_JOB_ID")
 
@@ -17,11 +28,6 @@ library(foreach)
 install.packages("doParallel", repos = "http://cran.us.r-project.org")
 library(doParallel)
 
-#[1] 22 21
-args(REA.Gibbs)
-tmp = read.csv("Input/lambda0.csv",header = FALSE)
-lambda0 = as.matrix(tmp)
-
 # Set up the parallelization. If running on slurm, use the number of cores available in the job. If running on desktop, use 2. 
 if (JOBID != "") {
   registerDoParallel(cores=(Sys.getenv("SLURM_NTASKS_PER_NODE")))
@@ -32,12 +38,25 @@ if (JOBID != "") {
 # Get date for file save name
 currentDate = Sys.Date()
 
-#  Here we could think about running this in parallel
+######################################
+
+# Run Bayesian analysis
+
+######################################
+
+
+# Load lambda prior information from preprocessing
+args(REA.Gibbs)
+tmp = read.csv("Input/lambda0.csv",header = FALSE)
+lambda0 = as.matrix(tmp)
+
+
+#  Loop over years and precip, run Bayesian analysis for each
 year = c(1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090)
 foreach (scen_ii = 1:3) %dopar%{
   foreach (ii = 10) %dopar%{
-    yearX = year[ii]
-    yearY = year[ii+1]
+    yearX = year[ii]    # Historical time period
+    yearY = year[ii+1]  # Future time period
     str1 = sprintf("Input/X_%d.csv",yearX)
     str2 = sprintf("Input/X_%d.csv",yearY)
     tmp = read.csv(str1,header = FALSE)
