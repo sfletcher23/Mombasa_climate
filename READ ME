@@ -1,27 +1,78 @@
-READ ME
+
 
 Title: Learning about climate change uncertainty enables flexible water infrastructure planning
 Authors: Sarah Fletcher, Megan Lickely, and Kenneth Strzepek
+
+READ ME
 
 Code documentation by Sarah Fletcher
 Massachusetts Institute of Technology
 Last updated: December 2018
 
 
-Code used and developed for this project comprises three main components:
+Code used and developed for this project comprises 3 main components:
 
 1) Bayesian statistical model
-2) CLIRUN hydrological model
+3) Streamflow and yield analysis
 3) Stochastic dynamic program (SDP)
 
+Software used to run the code includes R and MATLAB (R2016b). It can be run on a single computer or a supercomputing cluster that uses the SLURM scheduler. 
+
+In order to run on a new computer, you will need to change the project path in three places: BMA_code/MomUni_P.R line 16, BMA_code/MomUni_T.R line 16, and SDP/sdp_climate.m line 18 and 20.
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Step 1: Run Bayeisan statistical model analysis
 
 The code for the Bayesian statistical model is contained in the folder BMA_code. 
 To complete this analysis the following steps are needed:
 
-	1) Run pre_process_BMA.m in MATLAB. This takes historical and projected climate data from the file Input/Mombasa_TandP.mat and formats it to prepare for the Bayeisan analysis.
+	1) Run pre_process_BMA.m in MATLAB. 
 
-	2) Run MomUni_P.R and MomUni_T.R scripts using R. These scripts do batch analysis of the Bayesian modeling for each virtual future observation of T and P. To do this, they call the script REA.Gibbs.r, which was provided by Claudia Tebaldi, based on her 
+		This takes historical and projected climate data from the file Input/Mombasa_TandP.mat and formats it to prepare for the Bayeisan analysis.
+
+
+	2) Run MomUni_P.R and MomUni_T.R scripts using R. 
+	
+		These scripts do batch analysis of the Bayesian modeling for each virtual future observation of T and P. To do this, they call the script REA.Gibbs.r, which was graciously provided by Dr. Claudia Tebaldi at NCAR. This code reflects the Bayesian statistical analysis developed by Dr. Tebaldi and her colleagues in:
+
+		Smith, R. L., Tebaldi, C., Nychka, D., & Mearns, L. O. (2009). Bayesian Modeling of Uncertainty in Ensembles of Climate Models. Journal of the American Statistical Association, 104(485), 97–116. https://doi.org/10.1198/jasa.2009.0007
+
+		This results in a set of .mat files that start with "BMA_results_" that will be used subsequently.
+
+
+
+Step 2: Streamflow and yield analysis
+
+	This analysis is directly incorporated into the script that runs the SDP optimaztion model, so it does not need to be run separately. However, there are three major components you may wish to review:
+
+	1) Ranfall-runoff model
+
+		We estimate runoff in the Mwache dam using the CLIRUN II rainfall-runoff model. See for additional information: Strzepek, K., & Mccluskey, A. l. (2010). Modeling the Impact of Climate Change on Global Hydrology and Water Availability.
+
+		The folder "CLIRUN" contains all the code in this model. We calibrated this model using streamflow gauge data as described in the text of the paper. We considered several different calibrations and chose the one that had 1) had a high R-squared 2) good validation against MAR, and 3) relatively insensitive to initial paramtere values. Because the calibration process uses an approximate search algorithm and is sensitive to initial conditions, we include the calibrated model for reviewers' use. However, the calibration code can be inspected: see file "Calibrator.m" . The calibrated rainfall-runoff model can be run using the file "Simulator.m"
+
+	2) Stochastic weather generator
+
+		We develop monthly timeseries of temperature and precipitation for each of the possible 20-year mean T and P states using a k-nn bootstrapping approach developed by: Rajagopalan, B., & Lall, U. (1999). A k-nearest-neighbor Simulator for Daily Precipitation and Other Variables. Water Resources Research, 35(10), 3089–3101. https://doi.org/10.1029/1999WR900028
+
+		This code can be found in the file "SDP/mean2TPtimeseriesMJL_2.m"
+
+	3) Water system model (reservoir operations)
+
+		We assume fixed reservoir operating policies based on storage thresholds. This can be found in the file "SDP/runoff2yield.m"
+
+
+Step 3: Stochastic dynamic programming and simulation
+
+
+
+
+
+
+
+
+
 
 

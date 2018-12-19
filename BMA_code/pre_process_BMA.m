@@ -1,4 +1,5 @@
 
+
 % BMA pre-processing
 
 % This file prepares historical climate data and climate model projections
@@ -10,6 +11,7 @@
     % Historical precipitation (P0) and temperature (T0) data is sourced from CRU dataset version TS.3.21
         % Monthly data from 1901 to 2012 
         % Averaged over 2 degrees S to 6 degrees S and 38 degrees E to 42 degrees E
+        % Precipitation is in mm/month, temperature is in degrees C
 
     % An ensemble of 21 GCM projections of precipitaiton (Pij) and temperature (Tij)
         % Models listed in SI Table 1, regridded as described in methods.
@@ -27,80 +29,78 @@
     % and 21 columns for the climate ensembles
     
     % X0PU and X0TU are .csv files that contain the virtual future
-    % observations of climate that will be used to condition ???
+    % observations of climate that will be used to condition the
+    % uncertainty estimates in the next time period
         
 
 
-%% Load data and setup 
+%% Creating initial X, Y and lambda values.  These don't change 
 
-% Load data
-clear all; close all
 load('Input/Mombasa_TandP.mat'); 
 
-% Process historical and projected T and P data and save in .csv files
-rewrite_XYlambda = true;
 
-% Create virutal future observations of T and P to condition on
-create_scens = true;
+% I think this commented section below is not used in R code. Okay to delete?
+% % Select historical data from 1960 to 2010
+% % Log transform on P data so closer to normally distributed
+% for year = 61:110
+%     YT0(year-60) = mean(T0(12*(year-1)+1:12*year));
+%     YP0(year-60) = log(mean(P0(12*(year-1)+1:12*year)));
+% end
 
+% % Calculate deltas: change between means in 20-year consecutive time
+% % periods
+% X0 = [mean(YT0(21:40))-mean(YT0(1:20)), mean(YP0(21:40))-mean(YP0(1:20))]';
 
-%% Creating initial X, Y and lambda values
-if rewrite_XYlambda
+% Take yearly averages from projection data
+for year = 1:200
+    YTij(year,:) = mean(Tij(12*(year-1)+1:12*year,:),1);
+    YPij(year,:) = mean(Pij(12*(year-1)+1:12*year,:),1);
+end
+
+% I think this commented section below is not used in R code. Okay to delete?
+% % Saving variables for R code:   
+% csvwrite('Input/Tij.csv',Tij)
+% csvwrite('Input/Pij.csv',Pij)
+
+% Loop over 6 time periods (20 years each, first one is 1960-1980)
+for dec = 1:6
     
-    % Select historical data from 1970 to 2000
-    % Transform P to log
-    for year = 70:100
-        YT0(year-69) = mean(T0(12*(year-1)+1:12*year));
-        YP0(year-69) = log(mean(P0(12*(year-1)+1:12*year)));
-    end
+    % Calculate change in average temperature from one period to next
+    X(1,:) = [mean(YTij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YTij(20*(dec-1)+61:20*(dec-1)+80,:),1)']';
     
-    % Use historical mean and std to develop prior dist for lambda
-    % (reliabilities)
-    X0 = [mean(YT0), mean(YP0)]';
-    SD = [std(YT0), std(YP0)]';
+    % Calculate change in average precipitation from one period to next
+    X(2,:) = [(mean(YPij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)')./mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)']';
+    
+    % Save data for historical time period
+    str1 = sprintf('Input/X_%2.0f.csv',1990+20*(dec-1));
+    csvwrite(str1,X)
+    
+    % Calculate lambda priors using std dev of climate data
+    SD = [std(X(1,:)), std(X(2,:))]';
     lambda0 = SD.^(-2);
-    
-    % Take yearly averages for projection data
-    % Transform P to log
-    for year = 1:200
-        YTij(year,:) = mean(Tij(12*(year-1)+1:12*year,:),1);
-        YPij(year,:) = log(mean(Pij(12*(year-1)+1:12*year,:),1));
-    end
-
-    % Saving variables for R code: 
-    csvwrite('Input/lambda0.csv',lambda0)
-    csvwrite('Input/Tij.csv',Tij)
-    csvwrite('Input/Pij.csv',Pij)
-    
-    % Take decadal averages from 1990 to 2090
-    for decade = 1:11
-        X = [mean(YTij(10*(decade-1)+80:10*(decade-1)+100,:),1)', mean(YPij(10*(decade-1)+80:10*(decade-1)+100,:),1)']';
-        str1 = sprintf('Input/X_%2.0f.csv',1990+10*(decade-1));
-        csvwrite(str1,X)
-    end
-    
+    str1 = sprintf('Input/lambda0_%2.0f.csv',1990+20*(dec-1));
+    csvwrite(str1,lambda0)
 end
 
-%% Creating virtual future observations of T and P
+% % I think this commented section below is not used in R code. Okay to delete?
+% dec = 1;
+% X = [mean(YTij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YTij(20*(dec-1)+61:20*(dec-1)+80,:),1)', (mean(YPij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)')./mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)']';
+% SD = [std(X(1,:)), std(X(2,:))]';
+% lambda0 = SD.^(-2);
 
-% Here we create the range and discretiztation of future observations of T
-% and P that are used to condition the Bayesian model. 
+% csvwrite('Input/lambda0.csv',lambda0)
+% csvwrite('Input/X0.csv',X0)
 
-% These may not be the actual values, but used for exploratory analysis ???
 
-if create_scens
-    deltaT_X0(1:10,1) = zeros(10,1);
-    deltaT_X0(1:10,2) = 0:0.25:0.25*9;
-    deltaT_X0(1:10,3) = 0:0.5:4.5;
+%% Creating files with virtual future climate observations
 
-    deltaP_X0(1:10,1) = 0:-0.08:-0.72;
-    deltaP_X0(1:10,2) = zeros(10,1);
-    deltaP_X0(1:10,3) = 0:0.08:0.72;
+deltaT_X0 = repmat([0:0.05:1.5],10,1);
+deltaP_X0 = repmat([-0.3:0.02:0.3],10,1);
 
-    % Univariate case
-    X0_Topts = X0(1) + deltaT_X0;
-    X0_Popts = log(exp(X0(2))+exp(X0(2))*deltaP_X0);
+% Univariate case
+X0_Topts = deltaT_X0;
+X0_Popts = deltaP_X0;
 
-    csvwrite('Input/X0TU.csv',X0_Topts)
-    csvwrite('Input/X0PU.csv',X0_Popts) 
-end
+csvwrite('Input/X0TU.csv',X0_Topts)
+csvwrite('Input/X0PU.csv',X0_Popts) 
+

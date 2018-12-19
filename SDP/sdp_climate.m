@@ -12,13 +12,14 @@
 
 %% Setup 
 
-% Add subfolders to path; runs either on desktop or SLURM-based queueing
-% system on a cluster
+% Set Project root folder andAdd subfolders to path; runs either on desktop 
+% or on a cluster using SLURM queueing system 
 if ~isempty(getenv('SLURM_JOB_ID'))
-    addpath(genpath('/net/fs02/d2/sfletch/Mombasa_climate'))
+    projpath = '/net/fs02/d2/sfletch/Mombasa_climate';
 else
-    addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate'))
+    projpath = '/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate';
 end
+addpath(genpath(projpath))
 
 jobid = getenv('SLURM_JOB_ID');
 

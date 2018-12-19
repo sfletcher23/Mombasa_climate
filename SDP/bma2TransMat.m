@@ -2,9 +2,7 @@
 function [T_Temp_abs, T_Precip_abs, T_Temp_delta, T_Precip_delta, T_over_time, P_over_time] ...
     = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam)
 
-% Inputs BMA samples and returns transition matrices for deltas and
-% absolute values
-
+% Inputs BMA samples and returns Bellman transition matrices
 
 T_abs_max = max(s_T) * N;
 s_T_abs = climParam.T0_abs : climParam.T_delta : climParam.T0_abs+ T_abs_max;
@@ -17,6 +15,7 @@ s_P_abs = 66:1:97;
 M_P_abs = length(s_P_abs);
 P_bins_abs = [s_P_abs-climParam.P_delta/2  s_P_abs(end)+climParam.P_delta/2];
 T_Precip_abs = zeros(M_P_abs,M_P_abs,N);
+
 
 %% Deltas
 
@@ -103,8 +102,6 @@ end
 
 
 %% Absolutes from time series
-
-
 
 for i = 1:length(s_T_abs)
     for t = 1:N

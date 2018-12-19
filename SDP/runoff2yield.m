@@ -94,8 +94,6 @@ end
 
 end
 
-
-
 % Ag demand is unmet first
 unmet = max(demand - release - desalsupply, 0);
 unmet_ag = min(unmet, dmd_ag);

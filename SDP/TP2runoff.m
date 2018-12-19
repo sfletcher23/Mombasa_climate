@@ -11,33 +11,28 @@ function [runoff] = TP2runoff(T_ts, P_ts, steplen)
 % runoff is from CLIRUN in MCM/y , numsamp x steplen*12
 
 % Load CLIRUN calibration results
-calibrationFile = '29_Jan_2018_17_10_19_maybe_winner_3.mat';
-
-if ~isempty(getenv('SLURM_JOB_ID'))
-    load(strcat('/net/fs02/d2/sfletch/Mombasa_climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
-else
-    load(strcat('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/CLIRUN/OutputData/data/',calibrationFile), 'X_results')
-end
-
+calibrationFile = '29_Jan_2018_17_10_19_calibration.mat';
+load(calibrationFile, 'X_results')
 
 numMonths = steplen*12;
 [numSamples,~] = size(T_ts); 
 
 streamflow_mmpd = zeros(numSamples,numMonths);
 for i = 1:numSamples
-    watyear = 1;
-     streamflow_mmpd(i,:) = Simulator(X_results, T_ts(i,:), P_ts(i,:), watyear); % mm/d
+    
+    watyear = 1; % start year in january
+    
+    % Call CLIRUNII rainfall-runoff model
+    streamflow_mmpd(i,:) = Simulator(X_results, T_ts(i,:), P_ts(i,:), watyear); % mm/d
+    
 end
 
+% Unit conversion from mm/d to MCM/y
 area = 2250 * 1E6; % m2
 streamflow_cmpd = streamflow_mmpd /1E3 * area;
 streamflow_mcmpy = cmpd2mcmpy(streamflow_cmpd);
 runoff = streamflow_mcmpy;
 
-if false
-    figure;
-    plot(streamflow_mcmpy(1:10,:)')   
-end
 
 
 end

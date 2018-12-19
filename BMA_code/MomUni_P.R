@@ -1,13 +1,10 @@
-# This file is a script to run a batch of Bayeisan analysis for precipitaiton.
-# It calls REA.Gibbs, which uses MCMC methods to estimate the precipitation distribution for the next time period. 
-# We repeat this for each virutal observation of temperature and precipitation in each time period
 
 
-######################################
+#######################################
+# SETUP
+#######################################
 
-# Set up to run on a supercomputing cluster that uses a SLURM queueing system
-
-######################################
+# Enable running on SLURM scheduler on cluster
 
 # Get environment var from Slurm
 JOBID = Sys.getenv("SLURM_JOB_ID")
@@ -16,7 +13,7 @@ JOBID = Sys.getenv("SLURM_JOB_ID")
 if (JOBID != "") {
   cat("Slurm Job ID Found")
 } else {
-  setwd("~/Documents/MATLAB/Mombasa_Climate/BMA_code")
+  setwd("/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/BMA_code")
   cat("Slurm Job ID Not Found")
 }
 
@@ -38,39 +35,50 @@ if (JOBID != "") {
 # Get date for file save name
 currentDate = Sys.Date()
 
-######################################
 
-# Run Bayesian analysis
+#######################################
+# RUN BAYESIAN ANALYSIS
+#######################################
 
-######################################
-
-
-# Load lambda prior information from preprocessing
 args(REA.Gibbs)
-tmp = read.csv("Input/lambda0.csv",header = FALSE)
-lambda0 = as.matrix(tmp)
 
 
-#  Loop over years and precip, run Bayesian analysis for each
-year = c(1990,2000,2010,2020,2030,2040,2050,2060,2070,2080,2090)
-foreach (scen_ii = 1:3) %dopar%{
-  foreach (ii = 10) %dopar%{
-    yearX = year[ii]    # Historical time period
-    yearY = year[ii+1]  # Future time period
+#  Loop over each possible climate change observation in each time period
+year = c(1990,2010,2030,2050,2070,2090)
+foreach (scen_ii = 1:31) %dopar%{
+  foreach (ii = 1:5) %dopar%{
+    
+    # Set time periods
+    yearX = year[1] # Historical time period
+    yearY = year[ii+1] # Future time period
+    
+    # Load climate model projections for historical time period
     str1 = sprintf("Input/X_%d.csv",yearX)
-    str2 = sprintf("Input/X_%d.csv",yearY)
     tmp = read.csv(str1,header = FALSE)
     X = as.matrix(tmp)
     
+    # Load climate model projections for future time period
+    str2 = sprintf("Input/X_%d.csv",yearY)
     tmp = read.csv(str2,header = FALSE)
     Y = as.matrix(tmp)
     
+    # Load samples of lambda prior
+    str3 = sprintf("Input/lambda0_%d.csv",yearX)
+    tmp = read.csv(str3,header = FALSE)
+    lambda0 = as.matrix(tmp)
+
+    # Load virtual climate change observation for this time period
     tmp = read.csv("Input/X0PU.csv",header = FALSE)
     X0P = tmp[c(ii),c(scen_ii)]
+   
+    # Run Bayesian model 
     REA.Gibbs(X[c(2),],X0P[c(1)],lambda0[c(2)],Y[c(2),],N=1000)->rg0
     
+    # Save output
     mu0str = paste(sprintf("Output/muUP_%d_scen%d",yearY,scen_ii),"job", JOBID, currentDate, ".csv", sep="_")
     nu0str = paste(sprintf("Output/nuUP_%d_scen%d",yearY,scen_ii),"job", JOBID, currentDate, ".csv", sep="_")
+    lambdastr = paste(sprintf("Output/lambdaUP_%d_scen%d",yearY,scen_ii),"job", JOBID, currentDate, ".csv", sep="_")
+    write.table(rg0$lambda[,c(1:21),c(1:1000)], file = lambdastr,row.names=FALSE, col.names=FALSE,sep=",")
     write.table(rg0$mu, file = mu0str,row.names=FALSE, col.names=FALSE)
     write.table(rg0$nu, file = nu0str,row.names=FALSE, col.names=FALSE)
   }
