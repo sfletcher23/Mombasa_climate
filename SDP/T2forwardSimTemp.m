@@ -13,10 +13,7 @@ end
 for i = 1:numSamp
     for t = 1:N-t_now+1
         time = t_now + t -1;
-        i;
-        t;
         state_ind_T(i,t+1) = find(p(i,t) < cumsum(T_Temp(:,state_ind_T(i,t),time)),1); 
-        
     end
 end
 

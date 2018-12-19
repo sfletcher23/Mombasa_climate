@@ -22,7 +22,7 @@ for i = 1:numSamples
     
     watyear = 1; % start year in january
     
-    % Call CLIRUNII rainfall-runoff model
+    % Call CLIRUN rainfall-runoff model
     streamflow_mmpd(i,:) = Simulator(X_results, T_ts(i,:), P_ts(i,:), watyear); % mm/d
     
 end

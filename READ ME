@@ -20,6 +20,8 @@ Software used to run the code includes R and MATLAB (R2016b). It can be run on a
 
 In order to run on a new computer, you will need to change the project path in three places: BMA_code/MomUni_P.R line 16, BMA_code/MomUni_T.R line 16, and SDP/sdp_climate.m line 18 and 20.
 
+Please note that we have included the code and data necessary to generate the results presented in the paper. There were many other analyses done throughout to debug, check, plot, and validate individual pieces of the model; these are not inlcuded here given the large volume of code. 
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -51,7 +53,7 @@ Step 2: Streamflow and yield analysis
 
 		We estimate runoff in the Mwache dam using the CLIRUN II rainfall-runoff model. See for additional information: Strzepek, K., & Mccluskey, A. l. (2010). Modeling the Impact of Climate Change on Global Hydrology and Water Availability.
 
-		The folder "CLIRUN" contains all the code in this model. We calibrated this model using streamflow gauge data as described in the text of the paper. We considered several different calibrations and chose the one that had 1) had a high R-squared 2) good validation against MAR, and 3) relatively insensitive to initial paramtere values. Because the calibration process uses an approximate search algorithm and is sensitive to initial conditions, we include the calibrated model for reviewers' use. However, the calibration code can be inspected: see file "Calibrator.m" . The calibrated rainfall-runoff model can be run using the file "Simulator.m"
+		The folder "CLIRUN" contains all the code in this model. We calibrated this model using streamflow gauge data as described in the text of the paper. We considered several different calibrations and chose the one that had 1) a high R-squared 2) good validation against MAR, and 3) relatively insensitive to initial paramter values. Because the calibration process uses an approximate search algorithm and is sensitive to initial conditions, we include the calibrated model for reviewers' use. However, the calibration code can be inspected: see file "Calibrator.m" . The calibrated rainfall-runoff model can be run using the file "Simulator.m"
 
 	2) Stochastic weather generator
 

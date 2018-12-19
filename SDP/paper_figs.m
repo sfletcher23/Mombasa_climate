@@ -1,7 +1,6 @@
-%% Figures for NCC paper
-
+%% Figures 
 % Load data and set path
-if false
+if true
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/figure_tools'))
 load('results67847_19_Mar_2018_21_47_26_base.mat')
 end
@@ -9,9 +8,9 @@ decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 decadeline = {'2001-\newline2020', '2021-\newline2040', '2041-\newline2060', '2061-\newline2080', '2081-\newline2100'};
 
 
-%% Optimal policies plots
+%% Optimal policies plots: Fig 3
 
-if false
+if true
 
 % Calculate initial threshold
 policy1 =  X(:,:,1,1);
@@ -80,19 +79,19 @@ export_ppi = 600;
 print_png = true;
 print_pdf = false;
 savename = 'SDP plots/discounting 3 perc/sdp_policy2';
-printsetup(FigHandle, figure_width, figure_height, font_size, line_width, export_ppi, print_png, print_pdf, savename)
+%printsetup(FigHandle, figure_width, figure_height, font_size, line_width, export_ppi, print_png, print_pdf, savename)
 
 
 end
 
 
-%% Combine simulation data
+%% Simulation results: Fig 4
 
-if false
+if true
 
 data = {'results67847_19_Mar_2018_21_47_26_base.mat', ...
-    'results67351_18_Mar_2018_10_42_23_nodiscount', ...
-    'results67875_20_Mar_2018_16_32_51_desal'};
+    'results67351_18_Mar_2018_10_42_23_nodiscount.mat', ...
+    'results67875_20_Mar_2018_16_32_51_desal.mat'};
 action = cell(3,1);
 totalCostTime = cell(3,1);
 damCostTime = cell(3,1);
@@ -291,23 +290,7 @@ set(gcf, 'PaperPositionMode', 'manual');
 set(gcf, 'PaperPosition', [0 0 figure_width figure_height]);
 
 savename = '/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/SDP plots/Combined/hist_cdf_combined2';
-print(gcf, '-dpdf', strcat(savename, '.pdf'));
+% print(gcf, '-dpdf', strcat(savename, '.pdf'));
 
 end
 
-%% 
-
-[l1, l2] = legend(decade{2:end})
-
-for i = 5:2:12
-   width = l2(i).XData(2) - l2(i).XData(1);
-   left = l2(i).XData(1);
-   l2(i).XData(2) = left + width/2;
-end
-
-for i = 1:4
-    l2(i).Position(1) = l2(i).Position(1) - width/2;
-    l2(i).FontSize = 6;
-end
-
-legend('boxoff')
