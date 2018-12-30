@@ -18,7 +18,6 @@ TEMPRANGE = repmat(TEMPRANGE, numRuns, numYears);
 % Calculate PET using Modifed Hargreaves
 P_mmd = P ./ days; % mm/m to mm/d
 PET  = ModHargreaves4(LAT,WATYEAR,T,TEMPRANGE,P_mmd);
-% PET = Mon2TS(PETMon)'; % mm/d
 PET_mpm = PET .* days /1E3; 
 
 % Calcuate area for storage volume

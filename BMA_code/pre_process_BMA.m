@@ -36,7 +36,7 @@
 
 %% Creating initial X, Y and lambda values.  These don't change 
 
-load('Input/Mombasa_TandP.mat'); 
+load('Mombasa_TandP.mat'); 
 
 
 % I think this commented section below is not used in R code. Okay to delete?
@@ -81,16 +81,6 @@ for dec = 1:6
     str1 = sprintf('Input/lambda0_%2.0f.csv',1990+20*(dec-1));
     csvwrite(str1,lambda0)
 end
-
-% % I think this commented section below is not used in R code. Okay to delete?
-% dec = 1;
-% X = [mean(YTij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YTij(20*(dec-1)+61:20*(dec-1)+80,:),1)', (mean(YPij(20*(dec-1)+81:20*(dec-1)+100,:),1)'-mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)')./mean(YPij(20*(dec-1)+61:20*(dec-1)+80,:),1)']';
-% SD = [std(X(1,:)), std(X(2,:))]';
-% lambda0 = SD.^(-2);
-
-% csvwrite('Input/lambda0.csv',lambda0)
-% csvwrite('Input/X0.csv',X0)
-
 
 %% Creating files with virtual future climate observations
 

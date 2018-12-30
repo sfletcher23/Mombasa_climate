@@ -99,6 +99,8 @@ end
 
 %% Updating over time
 
+if false 
+
 p = randi(numSamp,N-1);
 state_ind_P = zeros(1,N);
 state_ind_T = zeros(1,N);
@@ -187,6 +189,8 @@ if false
     open(myVideo)
     writeVideo(myVideo, frames);
     close(myVideo)
+
+end
 
 end
 
@@ -338,15 +342,15 @@ end
 
 
 set(findall(fig.Children,'Type', 'Scatter'), 'SizeData', 10)
-for i = 1:4
-    ax = fig.Children(i);
-    ax.YLabel.Position = ax.YLabel.Position - [.18 0 0];
-end
-
-for i = 1:5
-    ax = fig.Children(i);
-    ax.XLabel.Position = ax.XLabel.Position - [0 .18 0];
-end
+% for i = 1:4
+%     ax = fig.Children(i);
+%     ax.YLabel.Position = ax.YLabel.Position - [.18 0 0];
+% end
+% 
+% for i = 1:5
+%     ax = fig.Children(i);
+%     ax.XLabel.Position = ax.XLabel.Position - [0 .18 0];
+% end
 
 %% Add individual GCM projections as deltas
 

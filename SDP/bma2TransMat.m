@@ -77,7 +77,7 @@ T_delta_over_time = s_T(state_ind_T);
 P_delta_over_time = s_P(state_ind_P);
 
 
-% Randomize starting point to get more variation in time series
+% Randomize starting point
 T0_abs_ind = randi(M_T_abs,climParam.numSamp_delta2abs,1);
 P0_abs_ind = randi(M_P_abs,climParam.numSamp_delta2abs,1);
 T0_abs = s_T_abs(T0_abs_ind)';

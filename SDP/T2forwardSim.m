@@ -1,9 +1,8 @@
 
 function [T_over_time] = T2forwardSim(T_Temp, s_T, N, t_now, T0, numSamp, randStart)
 
-% Takes transistion matrix T_Temp, starting value, and uses to simulate
-% time series. Variables are notated for temperature but works for precip
-% also.
+% Takes transistion matrix T_Temp for precipitation, starting value, and uses to simulate
+% time series. 
 
 p = rand(numSamp,N);
 

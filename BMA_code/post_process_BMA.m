@@ -29,8 +29,8 @@
 %% Setup file reading  
 
 % Which files to open
-dateOpenT = '2018-03-21';
-dateOpenP = '2018-03-21';
+dateOpenT = '2018-12-21';
+dateOpenP = '2018-12-19';
 
 % Need to input jobid of T and P runs if running on cluster
 jobid = (getenv('SLURM_JOB_ID'));
@@ -84,7 +84,7 @@ for scen_ii = 1:Nscens_P
         time_ii = time_ii+1;
 
         % Historical
-        tmpstr = strcat('Output/',sprintf('muUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv')
+        tmpstr = strcat('Output/',sprintf('muUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
         tmp = csvread(tmpstr);
         MUP(:,time_ii,scenid) = tmp;
 
@@ -101,7 +101,7 @@ for scen_ii = 1:Nscens_P
 end    
 
 % Save
-saveName = strcat('BMA_results', datestr(datetime)); 
+saveName = strcat('BMA_results', datetime); 
 save(saveName,'MUP','MUT','NUT','NUP','lamT','lamP', 'jobIdT', 'jobIdP')
 
 

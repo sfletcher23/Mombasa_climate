@@ -1,5 +1,8 @@
 function [T_over_time] = T2forwardSimTemp(T_Temp, s_T, N, t_now, T0, numSamp, randStart)
 
+% Takes transistion matrix T_Temp for temperature, starting value, and uses to simulate
+% time series. 
+
 p = rand(numSamp,N);
 
 state_ind_T = zeros(numSamp,N-t_now+1);

@@ -1,5 +1,84 @@
 %% Runoff and dam sizing analysis
+%% Parameters
 
+% Set up run paramters
+% Two purposes: 1) different pieces can be run independently using
+% saved results and 2) different planning scenarios (table 1) can be run
+runParam = struct;
+
+% Number of time periods
+runParam.N = 5; 
+
+% If true, run SDP to calculate optimal policies
+runParam.runSDP = true; 
+
+% Number of years to generate in T, P, streamflow time series
+runParam.steplen = 20; 
+
+% If true, simulate runoff time series from T, P time series using CLIRUN. If false, load saved.
+runParam.runRunoff = false; 
+
+% If true, simulate T, P time series from mean T, P states using stochastic weather gen. If false, load saved.
+runParam.runTPts = false; 
+
+% If true, change indices of saved runoff time series to correspond to T, P states (needed for parfor implementation)
+runParam.runoffPostProcess = false; 
+
+% If true, use optimal policies from SDP to do Monte Carlo simulation to esimate performance
+runParam.forwardSim = true; 
+
+% If true, calculate Bellman transition matrix from BMA results. If false, load saved.
+runParam.calcTmat = true; 
+
+% If true, calculate water shortage costs from runoff times series using water system model. If false, load saved.
+runParam.calcShortage = true; 
+
+% If false, do not include deslination plant (planning scenarios A and B
+% with current demand in table 1). If true, include desalination plant
+% (planning scenario C with higher deamnd).
+runParam.desalOn = false; 
+
+% Size of desalination plant for small and large versions [MCM/y]
+runParam.desalCapacity = [60 80];
+
+% If using pre-saved runoff time series, name of .mat file to load
+runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
+
+% If using pre-saved shortage costs, name of .mat file to load
+runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
+
+% If true, save results
+runParam.saveOn = true;
+
+
+% Set up climate parameters
+climParam = struct;
+
+%  Number of simulations to use in order to estimate absolute T and P
+%  values based on relative difference from one time period to the next
+climParam.numSamp_delta2abs = 100000;
+
+% Number of T,P time series to generate using stochastic weather generator
+climParam.numSampTS = 100;
+
+% If true, test number of simulated climate values are outside the range of
+% the state space in order to ensure state space validity
+climParam.checkBins = false;
+
+
+% Set up cost parameters; vary for sensitivity analysis
+costParam = struct;
+
+%costParam.yieldprctl = 50;
+
+% Value of shortage penalty for domestic use [$/m3]
+costParam.domShortage = 5;
+
+% Value of shortage penalty for ag use [$/m3]
+costParam.agShortage = 0;
+
+% Discount rate
+costParam.discountrate = .03;
 
 %% Analyze runoff 
 if true
@@ -76,7 +155,8 @@ for t = 1
             for s = 1:length(storage)
 
                 [yield_mdl, K, dmd, unmet_dom_mdl, unmet_ag_mdl]  = ...
-                    runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), runParam, climParam);
+                    runoff2yield(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, storage(s), 0, runParam, climParam);
+                
                 yield{index_s_t, index_s_p, s, t} = yield_mdl;
                 unmet_dom_90 = max(unmet_dom_mdl - cmpd2mcmpy(186000)*.1, 0);
                 unmet_ag{index_s_t, index_s_p, s, t} = unmet_ag_mdl;
