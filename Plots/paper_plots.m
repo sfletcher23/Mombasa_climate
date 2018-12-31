@@ -8,7 +8,7 @@ decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 decadeline = {'2001-\newline2020', '2021-\newline2040', '2041-\newline2060', '2061-\newline2080', '2081-\newline2100'};
 
 
-%% Optimal policies plots: Fig 3
+%% Optimal policies plots: Fig 4
 
 if true
 
@@ -85,7 +85,7 @@ savename = 'SDP plots/discounting 3 perc/sdp_policy2';
 end
 
 
-%% Simulation results: Fig 4
+%% Simulation results: Fig 5
 
 if true
 
