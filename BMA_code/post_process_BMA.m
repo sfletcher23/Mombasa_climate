@@ -30,7 +30,7 @@
 
 % Which files to open
 dateOpenT = '2018-12-21';
-dateOpenP = '2018-12-19';
+dateOpenP = '2018-12-31';
 
 % Need to input jobid of T and P runs if running on cluster
 jobid = (getenv('SLURM_JOB_ID'));
@@ -47,32 +47,32 @@ Nscens_T = 31;
 
 %% Loop over files and integrate into .mat file
 
-% Temperature
-for scen_ii = 1:Nscens_T
-	scenind = scen_ii;
-    
-        time_ii = 0;
-        for year = 2010:20:2090
-            
-            time_ii = time_ii+1;
-            
-            % Historical
-            tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-            tmp = csvread(tmpstr);
-            MUT(:,time_ii,scenind) = tmp;
-            
-            % Future
-            tmpstr = strcat('Output/',sprintf('nuUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-            tmp = csvread(tmpstr); 
-            NUT(:,time_ii,scenind) = tmp; 
-            
-            % Lambda
-            tmpstr = strcat('Output/',sprintf('lambdaUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-            tmp = csvread(tmpstr);
-            lamT(:,:,time_ii,scenind) = tmp;
-	     
-        end
-end
+% % Temperature
+% for scen_ii = 1:Nscens_T
+% 	scenind = scen_ii;
+%     
+%         time_ii = 0;
+%         for year = 2010:20:2090
+%             
+%             time_ii = time_ii+1;
+%             
+%             % Historical
+%             tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+%             tmp = csvread(tmpstr);
+%             MUT(:,time_ii,scenind) = tmp;
+%             
+%             % Future
+%             tmpstr = strcat('Output/',sprintf('nuUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+%             tmp = csvread(tmpstr); 
+%             NUT(:,time_ii,scenind) = tmp; 
+%             
+%             % Lambda
+%             tmpstr = strcat('Output/',sprintf('lambdaUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+%             tmp = csvread(tmpstr);
+%             lamT(:,:,time_ii,scenind) = tmp;
+% 	     
+%         end
+% end
 
 % Precipitaiton
 for scen_ii = 1:Nscens_P
@@ -101,7 +101,7 @@ for scen_ii = 1:Nscens_P
 end    
 
 % Save
-saveName = strcat('BMA_results', datetime); 
+saveName = strcat('BMA_results_', datestr(datetime, 'yyyy-mm-dd')); 
 save(saveName,'MUP','MUT','NUT','NUP','lamT','lamP', 'jobIdT', 'jobIdP')
 
 
