@@ -194,7 +194,7 @@ end
 % Calculate the Bellman transition vector for the climate states using the
 % Bayesian statistical model
 
-if runParam.calcTmat   
+if runParam.calcTmat
     load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
     [T_Temp, T_Precip, ~, ~, ~, ~] = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam);
     save('T_Temp_Precip', 'T_Temp', 'T_Precip')    

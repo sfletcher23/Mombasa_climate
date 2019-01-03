@@ -77,10 +77,7 @@ T_delta_over_time = s_T(state_ind_T);
 P_delta_over_time = s_P(state_ind_P);
 
 
-% Randomize starting point  
-% NOT SURE ABOUT RANDOMIZING STARTING POINT - I think the starting point 
-% Should be either the observed or within MUT given the observed. 
-% Or something within the range of modeled values
+% Randomize starting point
 T0_abs_ind = randi(M_T_abs,climParam.numSamp_delta2abs,1);
 P0_abs_ind = randi(M_P_abs,climParam.numSamp_delta2abs,1);
 T0_abs = s_T_abs(T0_abs_ind)';
@@ -88,8 +85,6 @@ P0_abs = s_P_abs(P0_abs_ind)';
 
 % Sum Temp delta time series to get absolutes
 T_over_time = cumsum( T_delta_over_time,2) + repmat(T0_abs,1,6);
-T_over_time2 = T_over_time - repmat(T_over_time(:,2),1,6)+28*ones(size(T_over_time));
-
 
 % Precip is percent change
 P_over_time = zeros(climParam.numSamp_delta2abs, N+1);
@@ -116,7 +111,7 @@ for i = 1:length(s_T_abs)
         T_next = T_current + relevant_deltas;
         T_Temp_abs(:,i,t) = histcounts(T_next, T_bins_abs, 'Normalization', 'Probability');     
     end
-end  
+end
 
 P_over_time_rounded = round(P_over_time);
 for i = 1:length(s_P_abs)

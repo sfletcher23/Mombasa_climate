@@ -37,9 +37,9 @@
 
 %% Creating initial X, Y and lambda values.  These don't change 
 
-load('Input/Mombasa_TandP.mat'); 
-delta_vals = 1;
-abs_vals = 0;
+load('Data/Mombasa_TandP.mat'); 
+delta_vals = 0;
+abs_vals = 1;
 % Take yearly averages from projection data
 for year = 1:200
     YTij(year,:) = mean(Tij(12*(year-1)+1:12*year,:),1);
@@ -68,7 +68,7 @@ for dec = 1:6
     
     % Calculate lambda priors using std dev of climate data
     SD = [std(X(1,:)), std(X(2,:))]';
-    lambda0 = SD.^(-2);
+    lambda0 = SD.^(2);
     str1 = sprintf('Input/lambda0_%2.0f.csv',1990+20*(dec-1));
     csvwrite(str1,lambda0)
 end

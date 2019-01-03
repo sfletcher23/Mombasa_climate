@@ -29,8 +29,14 @@
 %% Setup file reading  
 
 % Which files to open
-dateOpenT = '2018-12-21';
-dateOpenP = '2018-12-31';
+dateOpenT = '2018-12-31';
+dateOpenP = '2019-01-01';
+delta = false;
+if delta
+    outFolder = 'Output_deltas';
+else
+    outFolder = 'Output';
+end
 
 % Need to input jobid of T and P runs if running on cluster
 jobid = (getenv('SLURM_JOB_ID'));
@@ -42,37 +48,39 @@ else
     jobIdP = '';
 end
 
-Nscens_P = 31;
+% How many P and T values
+
 Nscens_T = 31;
+Nscens_P = 48;
 
 %% Loop over files and integrate into .mat file
 
-% % Temperature
-% for scen_ii = 1:Nscens_T
-% 	scenind = scen_ii;
-%     
-%         time_ii = 0;
-%         for year = 2010:20:2090
-%             
-%             time_ii = time_ii+1;
-%             
-%             % Historical
-%             tmpstr = strcat('Output/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-%             tmp = csvread(tmpstr);
-%             MUT(:,time_ii,scenind) = tmp;
-%             
-%             % Future
-%             tmpstr = strcat('Output/',sprintf('nuUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-%             tmp = csvread(tmpstr); 
-%             NUT(:,time_ii,scenind) = tmp; 
-%             
-%             % Lambda
-%             tmpstr = strcat('Output/',sprintf('lambdaUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
-%             tmp = csvread(tmpstr);
-%             lamT(:,:,time_ii,scenind) = tmp;
-% 	     
-%         end
-% end
+% Temperature
+for scen_ii = 1:Nscens_T
+	scenind = scen_ii;
+    
+        time_ii = 0;
+        for year = 2010:20:2090
+            
+            time_ii = time_ii+1;
+            
+            % Historical
+            tmpstr = strcat(outFolder, '/', sprintf('muUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+            tmp = csvread(tmpstr);
+            MUT(:,time_ii,scenind) = tmp;
+            
+            % Future
+            tmpstr = strcat(outFolder, '/',sprintf('nuUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+            tmp = csvread(tmpstr); 
+            NUT(:,time_ii,scenind) = tmp; 
+            
+            % Lambda
+            tmpstr = strcat(outFolder, '/',sprintf('lambdaUT_%d_scen%d',year,scen_ii),'_','job', '_',jobIdT,'_', dateOpenT,'_.csv');
+            tmp = csvread(tmpstr);
+            lamT(:,:,time_ii,scenind) = tmp;
+	     
+        end
+end
 
 % Precipitaiton
 for scen_ii = 1:Nscens_P
@@ -84,17 +92,17 @@ for scen_ii = 1:Nscens_P
         time_ii = time_ii+1;
 
         % Historical
-        tmpstr = strcat('Output/',sprintf('muUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
+        tmpstr = strcat(outFolder, '/',sprintf('muUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
         tmp = csvread(tmpstr);
         MUP(:,time_ii,scenid) = tmp;
 
         % Future
-        tmpstr = strcat('Output/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
+        tmpstr = strcat(outFolder, '/',sprintf('nuUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
         tmp = csvread(tmpstr);
         NUP(:,time_ii,scenid) = tmp;
 
         % Lambda
-        tmpstr = strcat('Output/',sprintf('lambdaUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
+        tmpstr = strcat(outFolder, '/',sprintf('lambdaUP_%d_scen%d',year,scen_ii),'_','job', '_',jobIdP,'_', dateOpenP,'_.csv');
         tmp = csvread(tmpstr);
         lamP(:,:,time_ii,scenid) = tmp;
     end
@@ -102,7 +110,7 @@ end
 
 % Save
 saveName = strcat('BMA_results_', datestr(datetime, 'yyyy-mm-dd')); 
-save(saveName,'MUP','MUT','NUT','NUP','lamT','lamP', 'jobIdT', 'jobIdP')
+save(saveName,'MUP','MUT','NUT','NUP','lamT','lamP', 'jobIdT', 'jobIdP', 'delta')
 
 
 
