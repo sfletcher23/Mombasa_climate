@@ -77,10 +77,7 @@ T_delta_over_time = s_T(state_ind_T);
 P_delta_over_time = s_P(state_ind_P);
 
 
-% Randomize starting point  
-% NOT SURE ABOUT RANDOMIZING STARTING POINT - I think the starting point 
-% Should be either the observed or within MUT given the observed. 
-% Or something within the range of modeled values
+% Select starting point 
 T0_abs_ind = randi(M_T_abs,climParam.numSamp_delta2abs,1);
 P0_abs_ind = randi(M_P_abs,climParam.numSamp_delta2abs,1);
 T0_abs = s_T_abs(T0_abs_ind)';
@@ -108,6 +105,8 @@ end
 
 %% Absolutes from time series
 
+% Calculate conditional prob of going from state X in time t-1 to state Y
+% in time t
 for i = 1:length(s_T_abs)
     for t = 1:N
         T_current = s_T_abs(i);

@@ -53,9 +53,6 @@ T0samp = MUT(:,1,indT0);
 T0samp = round2x(T0samp, s_T);
 
 
-%% Recursive function to calculate abs transition probabilities 
-
-% function [p_col] = 
 
 
 
@@ -66,7 +63,7 @@ T_2030 = 26.9; % Assumed in this example
 
 
 % Time period reference:
-% 2: 1990 to 2010, 2: 2010 to 2030, 3: 2030 to 2050, 4: 2050 to 2070, 5: 2070 to 2090
+% 1: 1990 to 2010, 2: 2010 to 2030, 3: 2030 to 2050, 4: 2050 to 2070, 5: 2070 to 2090
 
 
 
@@ -76,7 +73,7 @@ T_2030 = 26.9; % Assumed in this example
 
 
 p_dist = zeros(M_T_abs,1);  % Prob dist for all possible values in 2050 given T_2030 = 26.9
-
+ 
 for l = 1:M_T_abs % Starting values in 1990
     
     T0 = s_T_abs(l);
@@ -132,6 +129,9 @@ for l = 1:M_T_abs % Starting values in 1990
             % Multiply conditional deltas from each time period and sum over all
             % paths to get total probability 
             p = p + ( p_delta_2030_2050(k) * p_delta_2010_2030(k) * p_delta_1990_2010(k) );
+            
+            % Uh oh. I think this is total unconditional prob of being in a
+            % certain state, not the transition prob!!!!!!!!!!
 
         end
         p_dist_by_start(k) = p;
@@ -143,3 +143,87 @@ for l = 1:M_T_abs % Starting values in 1990
 end
 sum(p_dist) % Should ~ equal 1 to be valid prob dist
 s_T_abs(find(p_dist > 0)) % Shows 2050 T values with positive probability
+
+
+%% Calculate abs transition probabilities 
+
+% Calculate P2010
+
+% Loop over 2010 values
+T_Temp_abs_2010 = zeros(M_T_abs);
+
+for i = 1:M_T_abs
+    T_2010 = s_T_abs(i);
+
+    p_delta_1990_2010 = 0;
+    
+    % Loop over starting values
+    for l = 1:M_T_abs
+        T0 = s_T_abs(l);
+
+        delta_1990_2010 = T_2010 - T0;
+        ind_delta_1990_2010 = find(abs(s_T - delta_1990_2010) <0.01);
+
+        % Check feasible delta
+        if isempty(ind_delta_1990_2010)
+            continue; 
+        end
+
+        % for first time period, need unconditional delta, so average over
+        % samples of mu from first time period since state space doesn't tell
+        % us about delta prior to 1990
+        R = length(T0samp);
+            for j = 1:R
+                ind_T0samp= find(abs(T0samp(j) - s_T) < 0.01);
+                p_delta_1990_2010_samp(j) = T_Temp_del(ind_delta_1990_2010, ind_T0samp, 1) *1/R;
+            end
+        p_delta_1990_2010 = sum(p_delta_1990_2010_samp);
+        T_Temp_abs_2010(i,l) =  p_delta_1990_2010;
+        
+    end
+    
+end
+
+% Correct for values that would have transitioned above T_max
+col_p = sum(T_Temp_abs_2010);
+col_p_diff = 1 - col_p;
+T_Temp_abs_2010(end,:) = T_Temp_abs_2010(end,:) + col_p_diff;
+
+
+% Calculate 2030 T probs
+
+
+
+
+% 
+% 
+% % function [p] = prob2010(
+%     % Loop over values at t=1 (2010)
+%     p = 0; % P(T2010 = X | T1990)
+%     for i = 1:M_T_abs
+%         T_2010 = s_T_abs(i);
+%         T_delta_1990_2010 = T_next - T_2010;
+%         ind_delta_1990_2010 = find(abs(s_T - T_delta_1990_2010) < 0.01);
+%         
+%         % Check feasible delta
+%         if isempty(ind_delta_1990_2010)
+%             continue; 
+%         end
+%         
+%         R = length(T0samp);
+%         for j = 1:R
+%             ind_T0samp= find(abs(T0samp(j) - s_T) < 0.01);
+%             p_delta_1990_2010_samp(j) = T_Temp_del(ind_delta_1990_2010, ind_T0samp, 1) *1/R;
+%         end
+%         p_delta_1990_2010 = sum(p_delta_1990_2010_samp);
+% 
+%         % Multiply conditional deltas from each time period and sum over all
+%         % paths to get total probability 
+%         p = p +  p_delta_2010_2030(k) * p_delta_1990_2010(k) );
+%         
+%     end
+%     
+%     
+    
+    
+
