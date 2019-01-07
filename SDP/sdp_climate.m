@@ -590,7 +590,7 @@ end
 
 if runParam.forwardSim
         
-R = 1000; % Number of forward Monte Carlo simulations
+R = 10000; % Number of forward Monte Carlo simulations
 N = runParam.N; % Number of time periods
 
 T_state = zeros(R,N);
