@@ -49,7 +49,7 @@ Two data files used as input to the analysis are inlcuded in the "Data" folder.
 
 2) "Mombasa_TandP.mat"
 
-	This data file contains historical monthly precipitation (P0) in mm/month and temperature data (T0) in degrees C from Climate Research Unit (CRU) dataset version TS.3.21 for 1901 to 2012. It also contains projected monthly precipitation (Pij) in mm/month and temperature data (Tij) in degrees C from an ensemble of 21 General Circulation Model projections from 1901 to 2100. These data are spatial averages over over 2 degrees S to 6 degrees S and 38 degrees E to 42 degrees E, overlaying the Mwache catchment.
+	This data file contains historical monthly precipitation (P0) in mm/month and temperature data (T0) in degrees C from Climate Research Unit (CRU) dataset version TS.3.21 for 1901 to 2012. It also contains projected monthly precipitation (Pij) in mm/month and temperature data (Tij) in degrees C from an ensemble of 21 General Circulation Model projections from 1901 to 2100. The GCM ensembles used are listed (in the same order) in SI Table 1. These data are spatial averages over over 2 degrees S to 6 degrees S and 38 degrees E to 42 degrees E, overlaying the Mwache catchment.
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
