@@ -46,13 +46,13 @@ runParam.runSDP = true;
 runParam.steplen = 20; 
 
 % If true, simulate runoff time series from T, P time series using CLIRUN. If false, load saved.
-runParam.runRunoff = false; 
+runParam.runRunoff = true; 
 
 % If true, simulate T, P time series from mean T, P states using stochastic weather gen. If false, load saved.
-runParam.runTPts = false; 
+runParam.runTPts = true; 
 
 % If true, change indices of saved runoff time series to correspond to T, P states (needed for parfor implementation)
-runParam.runoffPostProcess = false; 
+runParam.runoffPostProcess = true; 
 
 % If true, use optimal policies from SDP to do Monte Carlo simulation to esimate performance
 runParam.forwardSim = true; 

@@ -7,7 +7,7 @@ READ ME
 
 Code documentation by Sarah Fletcher
 Massachusetts Institute of Technology
-Last updated: December 2018
+Last updated: January 14, 2019
 
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -23,7 +23,7 @@ Code used and developed for this project comprises 3 main components:
 3) Streamflow and yield analysis
 3) Stochastic dynamic program (SDP)
 
-Software used to run the code includes R and MATLAB (R2016b). It can be run on a single computer or a supercomputing cluster that uses the SLURM scheduler. 
+Software used to run the code includes RStudio 1.1.419 and MATLAB (R2016b). We have run several pieces of the analysis on a linux-based supercomputing cluster.
 
 In order to run on a new computer, you will need to change the project path in three places: BMA_code/MomUni_P.R line 16, BMA_code/MomUni_T.R line 16, and SDP/sdp_climate.m line 18 and 20.
 

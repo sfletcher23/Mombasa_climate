@@ -70,15 +70,23 @@ ylabel('Mean T [degrees C]')
 end
 
 
-FigHandle = f;
-figure_width = 5;
-figure_height = 3;
-font_size = 6;
-line_width = 1;
-export_ppi = 600;
-print_png = true;
-print_pdf = false;
-savename = 'SDP plots/discounting 3 perc/sdp_policy2';
+fig = f;
+
+font_size = 10;
+allaxes = findall(fig, 'type', 'axes');
+set(allaxes,'FontSize', font_size)
+set(findall(allaxes,'type','text'),'FontSize', font_size)
+
+figure_width = 7.2;
+figure_height = 5;
+set(fig, 'PaperUnits', 'inches');
+set(fig, 'PaperSize', [figure_width figure_height]);
+set(fig, 'PaperPositionMode', 'manual');
+set(fig, 'PaperPosition', [0 0 figure_width figure_height]);
+
+print('-r600', fig,'-depsc','Figure4_test.eps')
+
+
 %printsetup(FigHandle, figure_width, figure_height, font_size, line_width, export_ppi, print_png, print_pdf, savename)
 
 
@@ -156,7 +164,7 @@ end
 
 if true
 
-load('sim_data_combined')
+load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/SDP/sim_data_combined')
 
 [R,~,~] = size(action{1});
 labels = {'a)', 'b)', 'c)', 'd)', 'e)', 'f)'};
@@ -266,16 +274,16 @@ for k = 1:3
         text(255, .15, 'Scenario C: High demand - 0% DR')
     end
 end
-s = suptitle('Simulated infrastructure decisions and costs (N=1000)');
-s.FontWeight = 'bold';
-font_size = 12;
+% s = suptitle('Simulated infrastructure decisions and costs (N=1000)');
+% s.FontWeight = 'bold';
+font_size = 8;
 allaxes = findall(f, 'type', 'axes');
 set(allaxes,'FontSize', font_size)
 set(findall(allaxes,'type','text'),'FontSize', font_size)
 
 
-figure_width = 8.5;
-figure_height = 8.5;
+figure_width = 7.2;
+figure_height = 7;
 
 % DERIVED PROPERTIES (cannot be changed; for info only)
 screen_ppi = 72; 
@@ -292,12 +300,13 @@ set(gcf, 'PaperPosition', [0 0 figure_width figure_height]);
 savename = '/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/SDP plots/Combined/hist_cdf_combined2';
 % print(gcf, '-dpdf', strcat(savename, '.pdf'));
 
+print('-r600', gcf,'-depsc','Figure5.eps')
 end
 
 
 %% Regret plot: Fig 6
 
-load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/SDP/results67847_19_Mar_2018_21_47_26_base.mat')
+% Re-run forward simulation before doing this!
 
 % Regret for last time period
 bestOption = 0;

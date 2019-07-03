@@ -1,7 +1,7 @@
 %% Optimal policies plots: Fig 4
 
-% load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/SDP/results67847_19_Mar_2018_21_47_26_base.mat')
-
+load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/SDP/results67847_19_Mar_2018_21_47_26_base.mat')
+totalCostTime = totalCostTime{1};
 % Regret for last time period
 bestOption = 0;
 
