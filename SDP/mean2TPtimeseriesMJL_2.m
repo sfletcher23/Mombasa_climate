@@ -1,5 +1,5 @@
-function [T_ts, P_ts] = mean2TPtimeseriesMJL(timestep, steplen, numsamp)
-% updated March 13 by MJL. Using k-NN boostrapping method
+function [T_ts, P_ts] = mean2TPtimeseriesMJL_2(timestep, steplen, numsamp)
+% updated March 13 by MJL. Using k-NN boostrapping method by Rajagopalan et al., (1999)
 % Create timeseries of temperature and precipitation anomalies for a certain meam T
 % and P states. Anomalies here include the seasonal cycle.  To retrieve T
 % and P values, must add back in annual mean.  
@@ -21,11 +21,8 @@ startdate = (1990-1900)*12 + 1; % First period starts in 1990
 daterange = (timestep-1)*steplen*12 + startdate: (timestep)*steplen*12 + startdate - 1; % Second period starts in 2010
 
 %% Load Pij and Tij
-if ~isempty(getenv('SLURM_JOB_ID'))
-    load('/net/fs02/d2/sfletch/Mombasa_climate/BMA_code/Input/Mombasa_TandP.mat')
-else
-    load('/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/BMA_code/Input/Mombasa_TandP.mat', 'Tij', 'Pij')
-end
+
+load('Mombasa_TandP.mat', 'Tij', 'Pij')
 
 % Create standardized anomalies relative to decadal average across all GCMs for the current daterange
 Tmean_gcm = mean(Tij(daterange,:),1);
@@ -102,9 +99,8 @@ for year = 1:steplen
         % Sampling from the smallest k  (Step 5)
         successor = discretesample(K, numsamp)';
         time_indx = monthopts(m,firstk_indx(1,successor))+ones(1,numsamp);
-        % i don't know what to do if it gets to the end of our time span,
-        % going to resample a year and set the time indx to the month of
-        % for the following iteration
+        % if it gets to the end of our time span, resample a year and set 
+        % the time indx to the month of for the following iteration
         tmp =  find(time_indx == steplen*12+1);
         if isempty(tmp)
         else
@@ -121,8 +117,7 @@ T_ts = T_tsp.*Tstd_month(:,model_rand)' + Tmean_month(:,model_rand)';%+Tmean*one
 P_ts = P_tsp.*Pstd_month(:,model_rand)' + Pmean_month(:,model_rand)';%+Pmean*ones(size(P_tsp));
 T_ts = double(T_ts);
 P_ts = double(P_ts);
-% To avoid having negative precip, set all negative values equal to zero
-%P_ts(P_ts<0)=0;
+
 
 if false
     figure;
