@@ -37,7 +37,18 @@
 
 %% Creating initial X, Y and lambda values.  These don't change 
 
+rcp45 = true;
+if rcp45
+    Pij = Pij_45;
+    Tij = Tij_45;
+else
+    Pij = Pij_85;
+    Tij = Tij_85;
+end
+
 load('Data/Mombasa_TandP.mat'); 
+
+
 delta_vals = 0;
 abs_vals = 1;
 % Take yearly averages from projection data
