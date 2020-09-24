@@ -1,6 +1,6 @@
 %Setup
 clear all; close all
-load('BMA_results_deltas_2019-01-02.mat')
+load('BMA_results_RCP45_deltas_2019-07-29.mat')
 
 N = 5;
 
@@ -81,9 +81,9 @@ state_ind_P = zeros(1,N);
 state_ind_T = zeros(1,N);
 state_ind_P(1) =  find(P0_abs==s_P_abs);
 state_ind_T(1) = find(T0_abs==s_T_abs);
-randGen = true;
+randGen = false;
 state_ind_P(2:N) = [12 17 19 22];
-state_ind_T(2:N) = [9 22 35 50];
+state_ind_T(2:N) = [9 17 26 33];
 
 
 MAR = cellfun(@(x) mean(mean(x)), runoff);
@@ -228,7 +228,7 @@ state_ind_P(1) =  find(P0_abs==s_P_abs);
 state_ind_T(1) = find(T0_abs==s_T_abs);
 randGen = false;
 state_ind_P(2:N) = [9 9 8 7];
-state_ind_T(2:N) = [9 18 32 48];
+state_ind_T(2:N) = [9 17 26 33];
 
 
 MAR = cellfun(@(x) mean(mean(x)), runoff);

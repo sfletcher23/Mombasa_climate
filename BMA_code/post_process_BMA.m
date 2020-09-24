@@ -29,8 +29,8 @@
 %% Setup file reading  
 
 % Which files to open
-dateOpenT = '2018-12-31';
-dateOpenP = '2019-01-01';
+dateOpenT = '2019-07-12';
+dateOpenP = '2019-07-09';
 delta = false;
 if delta
     outFolder = 'Output_deltas';
@@ -51,7 +51,7 @@ end
 % How many P and T values
 
 Nscens_T = 31;
-Nscens_P = 48;
+Nscens_P = 31;
 
 %% Loop over files and integrate into .mat file
 

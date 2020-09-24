@@ -2,7 +2,7 @@
 % Load data and set path
 if true
 addpath(genpath('/Users/sarahfletcher/Documents/MATLAB/figure_tools'))
-load('results67847_19_Mar_2018_21_47_26_base.mat')
+load('results_29_Jul_2019_15_08_24_RCP45_base.mat')
 end
 decade = {'2001-2020', '2021-2040', '2041-2060', '2061-2080', '2081-2100'};
 decadeline = {'2001-\newline2020', '2021-\newline2040', '2041-\newline2060', '2061-\newline2080', '2081-\newline2100'};
@@ -56,7 +56,7 @@ title('Flexible dam policy')
 legend(decade{2:end})
 
 % Option 2 combined
-if false
+if true
 
 f = figure;
 plot(threshP, s_T_abs, 'LineWidth', 1.5, 'Color', 'k')
@@ -95,11 +95,12 @@ end
 
 %% Simulation results: Fig 5
 
-if true
+if false
 
-data = {'results67847_19_Mar_2018_21_47_26_base.mat', ...
-    'results67351_18_Mar_2018_10_42_23_nodiscount.mat', ...
-    'results67875_20_Mar_2018_16_32_51_desal.mat'};
+
+data = {'results_29_Jul_2019_15_08_24_RCP45_base.mat', ...
+    'results_29_Jul_2019_15_57_28_RCP45_nodiscount.mat', ...
+    'results_29_Jul_2019_17_10_26_RCP45_desal.mat'};
 action = cell(3,1);
 totalCostTime = cell(3,1);
 damCostTime = cell(3,1);
@@ -107,7 +108,7 @@ shortageCostTime = cell(3,1);
 
 for k = 1:3
     
-    load(data{k})
+    load(data{k}, 's_T_abs', 's_P_abs', 'T_Temp', 'T_Precip', 's_C', 'M_C', 'X', 'shortageCost', 'a_exp')
     
     % Set infra costs
     
@@ -156,7 +157,7 @@ for k = 1:3
 
 end
 
-save('sim_data_combined', 'action','damCostTime', 'shortageCostTime', 'totalCostTime')
+save('sim_data_combined_rcp45', 'action','damCostTime', 'shortageCostTime', 'totalCostTime')
 
 end
 
@@ -164,7 +165,24 @@ end
 
 if true
 
-load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/SDP/sim_data_combined')
+load('results_29_Jul_2019_15_08_24_RCP45_base.mat', 'action', 'totalCostTime')
+act1 = action;
+cost1 = totalCostTime;
+load('results_29_Jul_2019_15_57_28_RCP45_nodiscount.mat', 'action', 'totalCostTime')
+act2 = action;
+cost2 = totalCostTime;
+load('results_29_Jul_2019_17_10_26_RCP45_desal.mat', 'action', 'totalCostTime')
+act3 = action;
+cost3 = totalCostTime;
+action = cell(3,1);
+totalCostTime = cell(3,1);
+action{1} = act1;
+action{2} = act2;
+action{3} = act3;
+totalCostTime{1} = cost1;
+totalCostTime{2} = cost2;
+totalCostTime{3} = cost3;
+clear act1 act2 act3 cost1 cost2 cost3
 
 [R,~,~] = size(action{1});
 labels = {'a)', 'b)', 'c)', 'd)', 'e)', 'f)'};
@@ -276,31 +294,31 @@ for k = 1:3
 end
 % s = suptitle('Simulated infrastructure decisions and costs (N=1000)');
 % s.FontWeight = 'bold';
-font_size = 8;
-allaxes = findall(f, 'type', 'axes');
-set(allaxes,'FontSize', font_size)
-set(findall(allaxes,'type','text'),'FontSize', font_size)
+% font_size = 8;
+% allaxes = findall(f, 'type', 'axes');
+% set(allaxes,'FontSize', font_size)
+% set(findall(allaxes,'type','text'),'FontSize', font_size)
+% 
+% 
+% figure_width = 7.2;
+% figure_height = 7;
+% 
+% % DERIVED PROPERTIES (cannot be changed; for info only)
+% screen_ppi = 72; 
+% screen_figure_width = round(figure_width*screen_ppi); % in pixels
+% screen_figure_height = round(figure_height*screen_ppi); % in pixels
+% 
+% % SET UP FIGURE SIZE
+% set(f, 'Position', [100, 100, round(figure_width*screen_ppi), round(figure_height*screen_ppi)]);
+% set(gcf, 'PaperUnits', 'inches');
+% set(gcf, 'PaperSize', [figure_width figure_height]);
+% set(gcf, 'PaperPositionMode', 'manual');
+% set(gcf, 'PaperPosition', [0 0 figure_width figure_height]);
 
-
-figure_width = 7.2;
-figure_height = 7;
-
-% DERIVED PROPERTIES (cannot be changed; for info only)
-screen_ppi = 72; 
-screen_figure_width = round(figure_width*screen_ppi); % in pixels
-screen_figure_height = round(figure_height*screen_ppi); % in pixels
-
-% SET UP FIGURE SIZE
-set(f, 'Position', [100, 100, round(figure_width*screen_ppi), round(figure_height*screen_ppi)]);
-set(gcf, 'PaperUnits', 'inches');
-set(gcf, 'PaperSize', [figure_width figure_height]);
-set(gcf, 'PaperPositionMode', 'manual');
-set(gcf, 'PaperPosition', [0 0 figure_width figure_height]);
-
-savename = '/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/SDP plots/Combined/hist_cdf_combined2';
+% savename = '/Users/sarahfletcher/Documents/MATLAB/Mombasa_Climate/SDP plots/Combined/hist_cdf_combined2';
 % print(gcf, '-dpdf', strcat(savename, '.pdf'));
 
-print('-r600', gcf,'-depsc','Figure5.eps')
+% print('-r600', gcf,'-depsc','Figure5.eps')
 end
 
 

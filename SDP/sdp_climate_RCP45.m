@@ -17,7 +17,7 @@
 if ~isempty(getenv('SLURM_JOB_ID'))
     projpath = '/net/fs02/d2/sfletch/Mombasa_climate';
 else
-    projpath = '/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate';
+    projpath = '/Users/sarahfletcher/Dropbox (MIT)/Research/Mombasa_Climate';
 end
 addpath(genpath(projpath))
 
@@ -40,28 +40,28 @@ runParam = struct;
 runParam.N = 5; 
 
 % If true, run SDP to calculate optimal policies
-runParam.runSDP = true; 
+runParam.runSDP = false; 
 
 % Number of years to generate in T, P, streamflow time series
 runParam.steplen = 20; 
 
 % If true, simulate runoff time series from T, P time series using CLIRUN. If false, load saved.
-runParam.runRunoff = true; 
+runParam.runRunoff = false; 
 
 % If true, simulate T, P time series from mean T, P states using stochastic weather gen. If false, load saved.
-runParam.runTPts = true; 
+runParam.runTPts = false; 
 
 % If true, change indices of saved runoff time series to correspond to T, P states (needed for parfor implementation)
-runParam.runoffPostProcess = true; 
+runParam.runoffPostProcess = false; 
 
 % If true, use optimal policies from SDP to do Monte Carlo simulation to esimate performance
-runParam.forwardSim = true; 
+runParam.forwardSim = false; 
 
 % If true, calculate Bellman transition matrix from BMA results. If false, load saved.
 runParam.calcTmat = true; 
 
 % If true, calculate water shortage costs from runoff times series using water system model. If false, load saved.
-runParam.calcShortage = true; 
+runParam.calcShortage = false; 
 
 % If false, do not include deslination plant (planning scenarios A and B
 % with current demand in table 1). If true, include desalination plant
@@ -78,7 +78,7 @@ runParam.runoffLoadName = 'runoff_by_state_Mar16_knnboot_1t';
 runParam.shortageLoadName = 'shortage_costs_28_Feb_2018_17_04_42';
 
 % If true, save results
-runParam.saveOn = true;
+runParam.saveOn = false;
 
 
 % Set up climate parameters
@@ -93,7 +93,7 @@ climParam.numSampTS = 100;
 
 % If true, test number of simulated climate values are outside the range of
 % the state space in order to ensure state space validity
-climParam.checkBins = false;
+climParam.checkBins = true;
 
 
 % Set up cost parameters; vary for sensitivity analysis
@@ -108,7 +108,7 @@ costParam.domShortage = 5;
 costParam.agShortage = 0;
 
 % Discount rate
-costParam.discountrate = .03;
+costParam.discountrate = .00;
 
 
 %% SDP State and Action Definitions 
@@ -195,7 +195,7 @@ end
 % Bayesian statistical model
 
 if runParam.calcTmat
-    load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat')
+    load('BMA_code/BMA_results_RCP45_deltas_2019-07-29.mat')
     [T_Temp, T_Precip, ~, ~, ~, ~] = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam);
     save('T_Temp_Precip', 'T_Temp', 'T_Precip')    
 else
@@ -602,7 +602,7 @@ shortageCostTime = zeros(R,N,4);
 opexCostTime = zeros(R,N,4);
 totalCostTime = zeros(R,N,4); 
 
-load('BMA_results_deltap05T_p2P07-Feb-2018 20:18:49.mat', 'MUT', 'MUP')
+load('BMA_results_RCP45_deltas_2019-07-29.mat', 'MUT', 'MUP')
 indT0 = find(s_T_abs == climParam.T0_abs);
 indP0 = find(s_P_abs == climParam.P0_abs);
 T0samp = MUT(:,1,indT0);

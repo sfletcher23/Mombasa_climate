@@ -1,7 +1,7 @@
 clear all
 close all
 
-load('/Users/sarahfletcher/Dropbox (MIT)/Mombasa_Climate/Data/Mombasa_TandP.mat')
+load('/Users/sarahfletcher/Dropbox (MIT)/Research/Mombasa_Climate/Data/Mombasa_TandP.mat')
 
 % Absolute change
 figure;

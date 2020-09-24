@@ -37,6 +37,8 @@
 
 %% Creating initial X, Y and lambda values.  These don't change 
 
+load('Data/Mombasa_TandP.mat'); 
+
 rcp45 = true;
 if rcp45
     Pij = Pij_45;
@@ -46,11 +48,10 @@ else
     Tij = Tij_85;
 end
 
-load('Data/Mombasa_TandP.mat'); 
 
+delta_vals = true;
+abs_vals = false;
 
-delta_vals = 0;
-abs_vals = 1;
 % Take yearly averages from projection data
 for year = 1:200
     YTij(year,:) = mean(Tij(12*(year-1)+1:12*year,:),1);
