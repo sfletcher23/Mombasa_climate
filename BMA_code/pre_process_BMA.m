@@ -37,7 +37,7 @@
 
 %% Creating initial X, Y and lambda values.  These don't change 
 
-load('Data/Mombasa_TandP.mat'); 
+load('Data/Mombasa_TandP-45-85-updated_111020.mat'); 
 
 rcp45 = true;
 if rcp45
