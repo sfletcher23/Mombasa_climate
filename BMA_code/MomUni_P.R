@@ -45,7 +45,7 @@ args(REA.Gibbs)
 
 #  Loop over each possible climate change observation in each time period
 year = c(1990,2010,2030,2050,2070,2090)
-foreach (scen_ii = 1:48) %dopar%{
+foreach (scen_ii = 1:31) %dopar%{
   foreach (ii = 1:5) %dopar%{
     
     # Set time periods

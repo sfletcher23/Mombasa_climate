@@ -85,7 +85,7 @@ P0_abs = s_P_abs(P0_abs_ind)';
 
 % Sum Temp delta time series to get absolutes
 T_over_time = cumsum( T_delta_over_time,2) + repmat(T0_abs,1,6);
-T_over_time2 = T_over_time - repmat(T_over_time(:,2),1,6)+28*ones(size(T_over_time));
+% T_over_time2 = T_over_time - repmat(T_over_time(:,2),1,6)+28*ones(size(T_over_time));
 
 
 % Precip is percent change

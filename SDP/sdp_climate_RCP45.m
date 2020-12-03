@@ -196,6 +196,7 @@ end
 
 if runParam.calcTmat
     load('BMA_code/BMA_results_RCP45_deltas_2019-07-29.mat')
+%     load('BMA_code/BMA_results_deltas_2019-01-02.mat')
     [T_Temp, T_Precip, ~, ~, ~, ~] = bma2TransMat( NUT, NUP, s_T, s_P, N, climParam);
     save('T_Temp_Precip', 'T_Temp', 'T_Precip')    
 else

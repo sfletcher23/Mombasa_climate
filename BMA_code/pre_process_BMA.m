@@ -39,7 +39,7 @@
 
 load('Data/Mombasa_TandP-45-85-updated_111020.mat'); 
 
-rcp45 = true;
+rcp45 = true
 if rcp45
     Pij = Pij_45;
     Tij = Tij_45;
