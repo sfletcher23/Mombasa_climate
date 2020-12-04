@@ -197,6 +197,9 @@ load(runParam.runoffLoadName);
 
 %% Use reservoir operation model to calculate yield and shortage costs
 
+poolobj = parpool('local', 4);
+fprintf('Number of workers: %g\n', poolobj.NumWorkers)
+
 parfor t = 1
     for index_s_p = 1:length(s_P_abs)
         for index_s_t= 1:length(s_T_abs)
