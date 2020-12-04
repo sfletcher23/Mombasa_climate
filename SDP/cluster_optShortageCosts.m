@@ -1,5 +1,5 @@
 function  [shortageCost, yield, K, unmet_dom, unmet_ag, unmet_dom_squared, unmet_ag_squared]  =...
-    cluster_optShortageCosts(inflow, T, P, storage, runParam, climParam, costParam,index_s_p,index_s_t, s)
+    cluster_optShortageCosts(inflow, T, P, runParam, climParam, costParam,index_s_p,index_s_t,storage)
 
 % DESCRIPTION:
 %   Uses DDP to find the optimal release policy if runParam.optReservoir == true
@@ -40,9 +40,9 @@ desalsupply = zeros(numRuns,numYears*12);
 % optimize reservoir operation to minimize shortage costs using DDP for
 % each capacity
 
-eff_storage = storage(s) - dead_storage; %should have [60, 100]
+eff_storage = storage - dead_storage; %should have [60, 100]
 
-[E]  = evaporation_sdp(storage(s), T, P, climParam, runParam);
+[E]  = evaporation_sdp(storage, T, P, climParam, runParam);
 net_inflow = inflow-env_flow-E;
 K0 = eff_storage; % assume reservoir storage is initially full
 
