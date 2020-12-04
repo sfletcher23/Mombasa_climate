@@ -197,8 +197,12 @@ load(runParam.runoffLoadName);
 
 %% Use reservoir operation model to calculate yield and shortage costs
 
-poolobj = parpool('local', 4);
-fprintf('Number of workers: %g\n', poolobj.NumWorkers)
+
+pc = parcluster('local');
+if ~isempty(getenv('SLURM_JOB_ID'))
+    poolobj = parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
+    fprintf('Number of workers: %g\n', poolobj.NumWorkers)
+end
 
 parfor t = 1
     for index_s_p = 1:length(s_P_abs)
