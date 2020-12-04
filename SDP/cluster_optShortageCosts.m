@@ -23,7 +23,6 @@ function  [shortageCost, yield, K, unmet_dom, unmet_ag, unmet_dom_squared, unmet
 %   K is a monthly time series of effective reservoir storages (no dead storage) for the optimized
 %   reservoir
 
-
 numYears = runParam.steplen;
 [numRuns,~] = size(T);
 
@@ -70,7 +69,9 @@ for s = 1:length(storage)
     % quadratic formulation
     shortageCost =  (unmet_ag_squared * costParam.agShortage + unmet_dom_squared * costParam.domShortage) * 1E6;
     
-    savename_shortageCost = strcat('cluster_shortage_costs_s_t',num2str(index_s_t),'_s_p',num2str(index_s_p),'_s',num2str(s),'_',datetime);
+    savename_shortageCost = strcat('reservoir_results/cluster_shortage_costs_st',num2str(index_s_t),'_sp',num2str(index_s_p),'_s',num2str(s),'_', num2str(yyyymmdd(datetime)));
     save(savename_shortageCost, 'shortageCost', 'yield_mdl', 'yield', 'unmet_ag_mdl', 'unmet_ag', 'unmet_dom_mdl', 'unmet_dom', 'unmet_ag_squared', 'unmet_dom_squared')
+
+
 end
 end

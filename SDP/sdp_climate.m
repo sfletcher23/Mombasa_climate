@@ -16,12 +16,14 @@
 % or on a cluster using SLURM queueing system 
 if ~isempty(getenv('SLURM_JOB_ID'))
     projpath = '/net/fs02/d2/sfletch/Mombasa_climate';
+    jobid = getenv('SLURM_JOB_ID');
 else
     projpath = '/Users/sarahfletcher/Dropbox (MIT)/Fletcher_2019_Learning_Climate';
+    jobid = 'na';
 end
 addpath(genpath(projpath))
 
-jobid = getenv('SLURM_JOB_ID');
+
 
 % Get date for file name when saving results 
 datetime=datestr(now);
