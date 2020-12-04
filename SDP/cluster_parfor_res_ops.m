@@ -214,16 +214,14 @@ if ~isempty(getenv('SLURM_JOB_ID'))
 end
 
 
+t = 1
+parfor index_s_p = 1:length(s_P_abs)
+    for index_s_t= 1:length(s_T_abs)
+        for s = 2:2
 
-parfor t = 1
-    for index_s_p = 1:length(s_P_abs)
-        for index_s_t= 1:length(s_T_abs)
-            for s = 1:2
+             cluster_optShortageCosts(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, ...
+               storage(s), runParam, climParam, costParam,index_s_p,index_s_t, s);            
 
-                 cluster_optShortageCosts(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, ...
-                   storage(s), runParam, climParam, costParam,index_s_p,index_s_t, s);            
-
-            end
         end
     end
 end
