@@ -1,5 +1,5 @@
 function  [shortageCost, yield, K, unmet_dom, unmet_ag, unmet_dom_squared, unmet_ag_squared]  =...
-    cluster_optShortageCosts(inflow, T, P, runParam, climParam, costParam,index_s_p,index_s_t,storage)
+    cluster_optShortageCosts(inflow, T, P, runParam, climParam, costParam,index_s_p,index_s_t,storage, s)
 
 % DESCRIPTION:
 %   Uses DDP to find the optimal release policy if runParam.optReservoir == true
