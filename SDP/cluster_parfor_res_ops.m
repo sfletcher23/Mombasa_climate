@@ -193,20 +193,20 @@ load(runParam.runoffLoadName);
 %% Use reservoir operation model to calculate yield and shortage costs
 
 
-prefdir
-
-distcomp.feature( 'LocalUseMpiexec', false );
-
-poolobj = gcp('nocreate');
-delete(poolobj);
-pc = parcluster('local');
-pc.JobStorageLocation
-
-
-if ~isempty(getenv('SLURM_JOB_ID'))
-    poolobj = parpool(pc, str2num(getenv('SLURM_NTASKS')));
-    fprintf('Number of workers: %g\n', poolobj.NumWorkers)
-end
+% prefdir
+% 
+% distcomp.feature( 'LocalUseMpiexec', false );
+% 
+% poolobj = gcp('nocreate');
+% delete(poolobj);
+% pc = parcluster('local');
+% pc.JobStorageLocation
+% 
+% 
+% if ~isempty(getenv('SLURM_JOB_ID'))
+%     poolobj = parpool(pc, str2num(getenv('SLURM_NTASKS')));
+%     fprintf('Number of workers: %g\n', poolobj.NumWorkers)
+% end
 
 date='20201203'
 t = 1
