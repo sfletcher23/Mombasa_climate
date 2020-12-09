@@ -15,11 +15,6 @@ end
 addpath(genpath(projpath))
 mkdir('reservoir_results')
 
-% Get date for file name when saving results 
-datetime=datestr(now);
-datetime=strrep(datetime,':','_'); %Replace colon with underscore
-datetime=strrep(datetime,'-','_');%Replace minus sign with underscore
-datetime=strrep(datetime,' ','_');%Replace space with underscore
 
 %% Parameters
 
@@ -213,15 +208,20 @@ if ~isempty(getenv('SLURM_JOB_ID'))
     fprintf('Number of workers: %g\n', poolobj.NumWorkers)
 end
 
-
+date='20201203'
 t = 1
+
 for index_s_p = 1:length(s_P_abs)
     for index_s_t= 1:length(s_T_abs)
-        for s = 2:2
-
-             cluster_optShortageCosts(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, ...
-             runParam, climParam, costParam,index_s_p,index_s_t, storage(s), s);            
-
+        for s = 1:2
+             savename_shortageCost = strcat('reservoir_results/cluster_shortage_costs_st',...
+                 num2str(index_s_t),'_sp',num2str(index_s_p),'_s',num2str(s),'_', date, '.mat')
+             if isfile(savename_shortageCost)
+                 fprintf('File already exists: %s', savename_shortageCost)
+             else
+                 cluster_optShortageCosts(runoff{index_s_t,index_s_p,t}, T_ts{index_s_t,t}, P_ts{index_s_p,t}, ...
+                 runParam, climParam, costParam,index_s_p,index_s_t, storage(s), s, date);       
+             end
         end
     end
 end
