@@ -51,5 +51,5 @@ unmet_ag = unmet_ag_post;
 unmet_ag_squared = unmet_ag_squared_post;
 unmet_dom_squared = unmet_dom_squared_post;
 
-savename_shortageCost = strcat('shortage_costs', jobid,'_', string(datetime(indices(4),'ConvertFrom','yyyymmdd','Format','dd_MMM_yyy')));
+savename_shortageCost = strcat('shortage_costs', '_', string(datetime(indices(4),'ConvertFrom','yyyymmdd','Format','dd_MMM_yyy')));
 save(savename_shortageCost, 'shortageCost', 'yield', 'unmet_ag', 'unmet_dom', 'unmet_ag_squared', 'unmet_dom_squared','desal_opex')
