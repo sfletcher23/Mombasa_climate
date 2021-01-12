@@ -5,7 +5,7 @@
 % under the folder variable
 
 % Identify the files for post processing (cluster_shortage_costs...mat files)
-folder = '/net/fs02/d2/sfletch/Mombasa_climate'; % NOTE: replace the folder name to the local folder containing the cluster shortage cost files
+folder = '/net/fs02/d2/sfletch/Mombasa_climate/SDP/reservoir_results'; % NOTE: replace the folder name to the local folder containing the cluster shortage cost files
 cluster_files = dir(fullfile(folder,'cluster_shortage_costs_st*_sp*_s*.mat'));
 
 % Define number of temperature states (s_T_abs) and precipation states (s_P_abs), decision
@@ -28,14 +28,14 @@ desal_opex = []; % Currently, under the optimized reservoir scenario, desalinati
 % and s) to combine the files into a single data file that mirrors the output
 % from sdp_climate.m
 for i = 1:length(cluster_files)
-    index_file_name = cluster_files(i).name;
+    index_file_name = cluster_files(i).name
     indices = str2double(regexp(index_file_name,'\d+','match'));
     index_s_t = indices(1);
     index_s_p = indices(2);
     s = indices(3);
     t = 1; % here, t represents the N = 1 decision period
     
-    load(index_file_name);
+    load(strcat(folder,index_file_name));
     shortageCost_post(index_s_t, index_s_p, s, t) = shortageCost;
     yield_post(index_s_t, index_s_p, s, t) = yield;
     unmet_dom_post(index_s_t, index_s_p, s, t)= unmet_dom;
